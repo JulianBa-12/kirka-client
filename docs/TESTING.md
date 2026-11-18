@@ -44,3 +44,11 @@ The Owner AppImage was built and started against a local backend. On a test data
 - **Measured performance gains.** No benchmark comparison against the browser was made, so Polaris makes no claims about higher FPS.
 - **Recording.** The Replays view was opened without errors, but a full recording was not made in the headless sandbox. On Linux, Electron window capture records video without system audio.
 - **In-place AppImage update.** The update flow (signed manifest, SHA-512, swap, `.previous` rollback) uses the same Ed25519 envelope verification that the unit tests cover. The download, hash and swap steps can only be tested live once a second release exists, so a live swap from 1.0.0 to a newer release has not been tested yet.
+
+## Deployment verification (18 November 2026)
+
+- GitHub Actions on `main`: **Tests** passed and **Deploy Community Hub** passed.
+- https://julianba-12.github.io/kirka-client/ and its pages (downloads, news, changelog, skins, support) return HTTP 200. `data/client-bundle.json`, `data/releases.json` and `data/website-bundle.json` are served and signed with key `6906d93966a1b517`. Fixture data is not published (`/fixtures/` returns 404).
+- The download links point to the v1.0.0 release assets. The SHA-512 shown on the downloads page matches the uploaded AppImage (`f03920f73cbfe049…`).
+- The AppImage downloaded from the GitHub release was started and logged `accepted client bundle {"source":"mirror","sequence":2}` and `accepted releases bundle {"source":"mirror","sequence":2}`. So the shipped trust key verifies the live configuration.
+- The public release contains only the client AppImage, the client .deb and SHA256SUMS.txt. The Owner build is only in the private repository `JulianBa-12/polaris-owner`.
