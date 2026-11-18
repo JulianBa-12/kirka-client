@@ -79,6 +79,8 @@ function createAuthRoutes(ctx) {
     authLimit(req);
     const body = check(s.object({ username: s.string({ min: 1, max: 40 }), password: s.string({ min: 1, max: 200 }), totp: s.optional(s.string({ max: 20 })), client: CLIENT }), req.body);
     const user = verifyCredentials(req, body, 'user');
+    // The owner account has no password login at all (Polaris Owner uses device keys).
+    if (user.role === 'owner') { recordLogin(user, user.username, req, false, 'owner_password_login', 'user'); throw E.unauthorized('Wrong username or password'); }
     const sess = sessions.create(user, 'user', req, body.client);
     recordLogin(user, user.username, req, true, null, 'user');
     res.json({ token: sess.token, expiresAt: sess.expiresAt, user: meUser(user) });
@@ -174,7 +176,6 @@ function createAuthRoutes(ctx) {
     const u = req.user;
     if (!u.totp_enabled) throw E.badRequest('Two-factor authentication is not enabled');
     if (!verifyPassword(body.password, u.password_hash) || !verifyTotp(u.totp_secret, body.code)) throw E.unauthorized('Password or code is wrong');
-    if (u.role === 'owner' && settings.get().requireOwner2fa) throw E.forbidden('Owner two-factor authentication is required by system settings');
     db.run("UPDATE users SET totp_secret = NULL, totp_enabled = 0, recovery_codes = '[]' WHERE id = ?", u.id);
     audit(req, 'account.2fa_disabled', u.id);
     res.json({ ok: true });
@@ -211,52 +212,40 @@ function createAuthRoutes(ctx) {
   return { router: r, verifyCredentials, recordLogin, weakPassword };
 }
 
-/* ---------------- owner auth (/owner/auth) ---------------- */
-function createOwnerAuthRoutes(ctx, authApi) {
-  const { db, sessions, settings, rate, audit, log, cfg } = ctx;
+/* ---------------- owner auth (/owner/auth) ----------------
+ * No login: the Owner app proves possession of a registered device key
+ * (see owner-devices.js). There is no password or claim endpoint for the owner.
+ */
+function createOwnerAuthRoutes(ctx) {
+  const { db, sessions, settings, rate, audit, log, ownerDevices } = ctx;
   const r = express.Router();
-  const tokenFile = () => require('path').join(cfg.dataDir, 'owner-setup-token');
-  const ownerExists = () => !!db.get("SELECT id FROM users WHERE role = 'owner'");
+  const ownerExists = () => !!db.get("SELECT id FROM owner_devices WHERE revoked_at IS NULL");
 
-  r.get('/status', (_req, res) => res.json({ claimed: ownerExists(), require2fa: settings.get().requireOwner2fa }));
+  r.get('/status', (_req, res) => res.json({ claimed: ownerExists(), method: 'device-key' }));
 
-  r.post('/claim', (req, res) => {
+  r.get('/challenge', (req, res) => {
     rate(`auth:${req.ip}`, settings.get().rateLimits.auth, 60000);
-    if (ownerExists()) throw E.conflict('An owner account already exists');
-    const body = check(s.object({ setupToken: s.string({ min: 20, max: 200 }), username: USERNAME, password: s.string({ min: 14, max: 200 }) }), req.body);
-    let expected = '';
-    try { expected = fs.readFileSync(tokenFile(), 'utf8').trim(); } catch { /* none */ }
-    const a = Buffer.from(sha256(body.setupToken)); const b = Buffer.from(sha256(expected || crypto.randomBytes(16).toString('hex')));
-    if (!expected || !crypto.timingSafeEqual(a, b)) { log.warn('owner claim with invalid setup token', { ip: req.ip }); throw E.unauthorized('Setup token is not valid'); }
-    const weak = authApi.weakPassword(body.password, body.username);
-    if (weak) throw E.invalid([{ path: 'password', message: weak }]);
-    if (db.get('SELECT id FROM users WHERE username = ?', body.username)) throw E.conflict('That username is taken by a community account');
-    const id = db.tx(() => db.run("INSERT INTO users (username, display_name, password_hash, role, privacy, created_at, updated_at) VALUES (?,?,?,'owner',?,?,?)",
-      body.username, body.username, hashPassword(body.password), JSON.stringify({ ...DEFAULT_PRIVACY, onlineStatus: false }), now(), now()).id);
-    try { fs.unlinkSync(tokenFile()); } catch { /* already gone */ }
-    const user = db.get('SELECT * FROM users WHERE id = ?', id);
-    req.user = user;
-    audit(req, 'owner.claimed', id);
-    log.info('owner account provisioned', { username: user.username });
-    const sess = sessions.create(user, 'owner', req, 'owner');
-    authApi.recordLogin(user, user.username, req, true, 'claim', 'owner');
-    res.status(201).json({ token: sess.token, expiresAt: sess.expiresAt, user: meUser(user) });
+    res.json(ownerDevices.issueChallenge());
   });
 
-  r.post('/login', (req, res) => {
+  r.post('/connect', (req, res) => {
     rate(`auth:${req.ip}`, settings.get().rateLimits.auth, 60000);
-    const body = check(s.object({ username: s.string({ min: 1, max: 40 }), password: s.string({ min: 1, max: 200 }), totp: s.optional(s.string({ max: 20 })) }), req.body);
-    const user = authApi.verifyCredentials(req, body, 'owner');
-    if (user.role !== 'owner') { authApi.recordLogin(user, user.username, req, false, 'not_owner', 'owner'); log.warn('non-owner attempted owner login', { username: user.username, ip: req.ip }); throw E.forbidden('This account is not the project owner'); }
-    if (settings.get().requireOwner2fa && !user.totp_enabled) {
-      // still allow login so the owner can enable 2FA, but flag it
-      log.warn('owner login without 2FA while 2FA is required');
+    const body = check(s.object({ deviceId: s.string({ min: 16, max: 16 }), nonce: s.string({ min: 16, max: 100 }), signature: s.string({ min: 80, max: 120 }) }), req.body);
+    let out;
+    try { out = ownerDevices.connect(body); } catch (e) {
+      db.run('INSERT INTO login_history (user_id, username, ip, user_agent, success, reason, scope, at) VALUES (?,?,?,?,?,?,?,?)',
+        null, `device:${String(body.deviceId).slice(0, 16)}`, req.ip, String(req.get('user-agent') || '').slice(0, 300), 0, e.code || 'device', 'owner', now());
+      log.warn('rejected owner connection', { ip: req.ip, reason: e.code });
+      throw e;
     }
-    const sess = sessions.create(user, 'owner', req, 'owner');
-    authApi.recordLogin(user, user.username, req, true, null, 'owner');
+    const { user, device } = out;
+    ownerDevices.touch(device.id, req.ip);
+    const sess = sessions.create(user, 'owner', req, 'owner', device.id);
+    db.run('INSERT INTO login_history (user_id, username, ip, user_agent, success, reason, scope, at) VALUES (?,?,?,?,?,?,?,?)',
+      user.id, user.username, req.ip, String(req.get('user-agent') || '').slice(0, 300), 1, `device:${device.id}`, 'owner', now());
     req.user = user;
-    audit(req, 'owner.login', user.id);
-    res.json({ token: sess.token, expiresAt: sess.expiresAt, user: meUser(user), mustEnable2fa: settings.get().requireOwner2fa && !user.totp_enabled });
+    audit(req, 'owner.connected', device.id, { name: device.name });
+    res.json({ token: sess.token, expiresAt: sess.expiresAt, user: meUser(user), device: { id: device.id, name: device.name } });
   });
 
   return r;

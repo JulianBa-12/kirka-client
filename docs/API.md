@@ -6,7 +6,7 @@ All bodies are JSON (`Content-Type: application/json`) except uploads (`multipar
 ## Conventions
 
 - **Auth**: `Authorization: Bearer <token>`. Tokens are opaque 256-bit random strings; the server stores only their SHA-256.
-- **Scopes**: a session has scope `user` (client/website login) or `owner` (Owner app login). `/owner/*` requires scope `owner` **and** role `owner`. An owner's `user`-scope token cannot call `/owner/*`.
+- **Scopes**: a session has scope `user` (client/website login) or `owner` (Owner app connection). `/owner/*` requires scope `owner`, role `owner` **and** a session bound to a non-revoked owner connection. The owner account has no password, so `/auth/login` refuses it.
 - **Errors**: non-2xx with `{ "error": { "code": "snake_case", "message": "Human readable", "details": [...] } }`.
   Common codes: `unauthorized` 401, `forbidden` 403, `not_found` 404, `validation_failed` 422 (details = `[{path, message}]`), `rate_limited` 429, `maintenance` 503, `conflict` 409, `totp_required` 401, `payload_too_large` 413.
 - **Lists**: `?limit=` (default 20, max 100) and `?offset=`. Response `{ items: [...], total }`.
@@ -168,11 +168,17 @@ Crosshair / hud / theme items: the uploaded file is a JSON document (validated a
 ### Owner authentication
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/owner/auth/status` | public: `{ claimed: bool, require2fa: bool }` |
-| POST | `/owner/auth/claim` | public, only while unclaimed: `{ setupToken, username, password (≥14) }` → `{ token, expiresAt, user }`. The setup token is printed by the server on first start and stored in `data/owner-setup-token` (mode 600); it is single-use. |
-| POST | `/owner/auth/login` | `{ username, password, totp? }` → `{ token, expiresAt, user }` (scope owner, default TTL 12 h) |
+| GET | `/owner/auth/status` | public: `{ claimed: bool, method: 'device-key' }` |
+| GET | `/owner/auth/challenge` | public, rate-limited: `{ nonce, expiresAt }` (single use, 2 min) |
+| POST | `/owner/auth/connect` | public, rate-limited: `{ deviceId, nonce, signature }`. `signature` = base64 Ed25519 signature of `polaris-owner-device/1\|connect\|<nonce>\|<deviceId>` with the connection's private key → `{ token, expiresAt, user, device:{ id, name } }` (scope owner, default TTL 12 h). Errors: 403 `device_not_registered` / `device_revoked`, 401 `device_signature` / `device_challenge`. |
+| GET | `/owner/devices` | `{ items: [{ id, name, createdAt, lastUsedAt, lastIp, revokedAt, current }] }` |
+| POST | `/owner/devices` | `{ publicKey (base64 SPKI DER, Ed25519), name }` → 201 `{ id }`. Used by *Add another computer*; 409 if the key is already registered |
+| PATCH | `/owner/devices/:id` | `{ name }` |
+| DELETE | `/owner/devices/:id` | revokes the connection and ends its sessions; 409 for the last active connection |
 
-All other account operations (`/auth/me`, `/auth/logout`, `/auth/sessions`, `/auth/2fa/*`, `/auth/password`, `/auth/login-history`) accept owner tokens too.
+There is no owner password login and no claim endpoint. The first connection is created by the backend on first start (`data/owner-connection.json`), more with `npm run owner:connection` on the server.
+
+`/auth/me`, `/auth/sessions` and `/auth/login-history` also accept owner tokens.
 
 ### Overview
 `GET /owner/overview` →
@@ -243,8 +249,8 @@ Accepted: PNG, JPEG, WebP, GIF, SVG (sanitized; scripts/handlers/foreignObject/e
 
 ### System, security, data
 | GET | `/owner/system` | `{ settings, runtime:{ node, uptime, memory, platform, pid }, env:{ publicUrl, corsOrigins, githubPublishing, dataDir } }` |
-| PATCH | `/owner/system/settings` | `{ maintenance, maintenanceMessage, registrationOpen, rateLimits:{ auth, api, upload }, uploadLimits:{ maxBytes, maxAvatarBytes }, sessionTtlHours:{ user, owner }, requireOwner2fa, communityChat:bool }` |
-| GET | `/owner/security` | `{ owner:{ twoFactorEnabled }, ownerSessions:[…], failedLogins24h, recentFailures:[…], signingKey:{ keyId, createdAt } }` |
+| PATCH | `/owner/system/settings` | `{ maintenance, maintenanceMessage, registrationOpen, rateLimits:{ auth, api, upload }, uploadLimits:{ maxBytes, maxAvatarBytes }, sessionTtlHours:{ user, owner }, communityChat:bool }` |
+| GET | `/owner/security` | `{ owner:{ username }, ownerSessions:[…], failedLogins24h, recentFailures:[…], signingKey:{ keyId, createdAt } }` |
 | GET | `/owner/audit?actor&action&limit&offset` | `{ items:[{ id, at, actor, action, target, details, ip }], total }` |
 | GET | `/owner/logs?level=info|warn|error&limit` | `{ items:[{ at, level, msg, meta }] }` (in-memory ring buffer of the last 2000 entries) |
 | GET | `/owner/analytics?days=30` | `{ daily:[{ date, activeUsers, registrations, heartbeats, downloads, uploads, messages }], versions:[{ version, installs }], platforms:[…], content:{ byKind:{…} }, totals:{…} }` |

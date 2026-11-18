@@ -81,7 +81,6 @@ const DEFAULT_SETTINGS = {
   rateLimits: { auth: 10, api: 240, upload: 20 },
   uploadLimits: { maxBytes: 8 * 1024 * 1024, maxAvatarBytes: 1024 * 1024 },
   sessionTtlHours: { user: 24 * 30, owner: 12 },
-  requireOwner2fa: false,
   communityChat: true,
 };
 

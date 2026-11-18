@@ -6,7 +6,7 @@ Tested on 18 November 2026 on Linux x86_64 (Debian-based sandbox, Xvfb display a
 
 | Suite | Command | Result |
 | --- | --- | --- |
-| Backend API (auth, 2FA, recovery codes, owner claim, owner scope enforcement, config draft → publish → rollback, signature verification, uploads, social, moderation) | `npm --prefix backend test` | 14 / 14 passed |
+| Backend API (auth, 2FA and recovery codes for community accounts, owner connections: first-start connection file, challenge/response, forged / replayed / unknown / revoked keys, add and revoke computers, last-connection guard, server CLI; owner scope enforcement, config draft → publish → rollback, signature verification, uploads, social, moderation) | `npm --prefix backend test` | 14 / 14 passed |
 | Client unit tests (signed envelopes and trust store, schema validation, CSS sanitizer, magic-byte file detection, library and plugin package validation, fallback to defaults, using an Electron stub) | `npm --prefix apps/client test` | 13 / 13 passed |
 | Client static check (syntax of every main, preload and renderer file) | `npm --prefix apps/client run check` | 47 / 47 files OK |
 | Community Hub build and smoke test (16 pages, internal links, module imports, data shapes) | `npm --prefix apps/community-hub test` | passed |
@@ -28,7 +28,22 @@ The screenshots were reviewed by hand. Defects found during review were fixed be
 
 ## Owner application
 
-The Owner AppImage was built and started against a local backend. On a test database, these steps were exercised end to end: claim with the setup token, sign in, enable 2FA, edit the configuration draft, test it, publish it, roll it back, manage news and releases, moderate content, browse the database and read the audit log. Requests to `/owner/*` without an owner-scope session are rejected by the backend (also covered by the backend tests).
+Polaris Owner has no login. These checks ran against a fresh local backend on a throwaway database. Each one was driven over the DevTools protocol, with screenshots reviewed by hand:
+
+| Check | Result |
+| --- | --- |
+| First backend start creates `data/owner-connection.json` (mode 0600) | yes |
+| `GET /owner/overview` without a session, and the old `POST /owner/auth/login` | 401 |
+| Development build, connection file in the config folder: start opens the Overview directly, no password field anywhere; the file is moved into the store and deleted | passed |
+| Feature change: draft → publish → public `/bundles/client` shows the new value (sequence 2) | passed |
+| All owner sessions revoked in the database while the app runs: next action reconnects silently, no screen change | passed |
+| Second computer (`npm run owner:connection`, `POLARIS_OWNER_CONNECTION`) opens the dashboard; removed from the first app under Security; the second app shows *Connection not accepted* on its next request | passed |
+| Restart: dashboard opens again without input | passed |
+| Empty profile: *Connect this computer*; file dropped in, *Check again* → dashboard | passed |
+| Backend stopped: *Backend not reachable* with countdown; backend started → dashboard opens by itself | passed |
+| Packaged `Polaris-Owner-1.0.0.AppImage`, connection file next to the AppImage, empty profile: dashboard opens directly; publish → live bundle sequence 3; Security warns about the leftover file | passed |
+
+The sandbox has no OS keyring, so the tests used the file fallback (mode 0600) for the key. The encrypted `safeStorage` path is the same code with `encryptString`/`decryptString`, but it was not run here.
 
 ## Packaging
 
@@ -36,7 +51,7 @@ The Owner AppImage was built and started against a local backend. On a test data
 | --- | --- | --- |
 | `dist/Polaris-Client-1.0.0.AppImage` | 108.4 MB | Started under Xvfb, UI test passed |
 | `dist/Polaris-Client-1.0.0.deb` | 75.0 MB | Built by electron-builder. Contents not installed system-wide in the sandbox |
-| `dist/Polaris-Owner-1.0.0.AppImage` | 108.7 MB | Started and tested against a local backend |
+| `dist/Polaris-Owner-1.0.0.AppImage` | 108.7 MB | Started (extract-and-run, no FUSE in the sandbox) and tested against a local backend |
 
 ## Limits (not tested or not testable here)
 

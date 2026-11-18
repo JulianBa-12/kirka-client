@@ -1,9 +1,29 @@
 # Owner setup
 
-This guide walks you from a fresh backend to an owner account protected by
-two-factor authentication. It also covers backups and GitHub Pages
-publishing. Every step happens in **Polaris Owner** (`apps/owner`) or on the
-backend host. No owner credentials exist anywhere in the repository.
+This guide takes you from a fresh backend to a working Polaris Owner. Polaris
+Owner has **no login**: no username, no password, no sign-in screen. When you
+start it, it opens the Owner Dashboard directly. It also covers backups and
+GitHub Pages publishing. No owner credentials exist anywhere in the repository.
+
+## How owner access works
+
+- On its first start the backend creates the owner account and an **owner
+  connection**: an Ed25519 key pair. The backend stores only the public key.
+  The private key goes into `data/owner-connection.json` (mode 0600), together
+  with the backend URL.
+- Polaris Owner imports this file once and stores it in its config folder
+  (`~/.config/Polaris Owner/`), encrypted with the OS keyring (`safeStorage`).
+  Without a keyring it uses a file readable only by your user (mode 0600).
+- On every start, and whenever a session expires, the app silently fetches a
+  one-time challenge from the backend, signs it with the private key and
+  receives an owner session (`POST /owner/auth/connect`). You never type
+  anything.
+- The backend gives owner rights only to a valid signature from a registered,
+  non-revoked connection. The public Polaris Client never gets owner rights,
+  even if it claims to be an owner. The owner account has no password, so
+  `/auth/login` refuses it. A hidden button or a local flag does nothing.
+- **Anyone who has the connection file has owner access.** Treat it like an
+  SSH private key.
 
 ## 1. Start the backend
 
@@ -13,93 +33,80 @@ npm install
 npm start                       # listens on http://127.0.0.1:8787 by default
 ```
 
-Relevant environment variables (also read from `backend/.env`):
+Set `POLARIS_PUBLIC_URL` to the address at which the Owner computer reaches the
+backend (for example `https://api.example.org`). That address is written into
+the connection file.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `POLARIS_DATA_DIR` | `./data` | Database, uploads, backups, signing keys, setup token |
+| `POLARIS_DATA_DIR` | `./data` | Database, uploads, backups, signing keys, first owner connection |
 | `POLARIS_PORT` / `POLARIS_HOST` | `8787` / `127.0.0.1` | Listen address |
-| `POLARIS_PUBLIC_URL` | `http://127.0.0.1:<port>` | Public base URL used in file links |
+| `POLARIS_PUBLIC_URL` | `http://127.0.0.1:<port>` | Public base URL (file links, owner connection) |
 | `POLARIS_CORS_ORIGINS` | GitHub Pages + local dev origins | Allowed browser origins (website) |
 | `POLARIS_TRUST_PROXY` | `0` | Set `1` behind a reverse proxy |
 | `POLARIS_SIGNING_KEY_FILE` | — | Use an existing Ed25519 key instead of `data/keys` |
 
-## 2. Get the one-time setup token
-
-While no owner account exists, the backend creates a random setup token. It
-prints the token to the console on every start:
+On the first start the log shows:
 
 ```
-    OWNER SETUP TOKEN: 3o0W…
+WARN Owner connection created: /…/backend/data/owner-connection.json
 ```
 
-The token is also stored in `data/owner-setup-token` (mode 0600). To print it
-again, or to rotate it if it may have leaked:
+## 2. Connect Polaris Owner (once)
+
+Use one of these:
+
+- **Same computer:** copy the file to `~/.config/Polaris Owner/owner-connection.json`
+  and start Polaris Owner. The app moves it into its encrypted store and deletes
+  that copy.
+- **Next to the AppImage:** put `owner-connection.json` in the folder of
+  `Polaris-Owner-1.0.0.AppImage`. The app imports it on start. Delete the file
+  afterwards (Security shows a warning while it still exists).
+- **Open it by hand:** if the app has no connection yet, it shows *Connect
+  this computer* → **Open connection file…**.
+- **Servers / scripts:** `POLARIS_OWNER_CONNECTION=/path/to/file` always wins.
+  In this case the file stays where it is.
+
+Copy the file from a remote server over a secure channel (`scp`), never by
+chat or e-mail. Then delete the copy on the server: `rm backend/data/owner-connection.json`.
+The backend reminds you in its log on each start while the file exists.
+
+From now on Polaris Owner opens the dashboard directly. If the backend is not
+reachable, the app shows *Backend not reachable* and retries every 5 seconds.
+Under *Change address* you can enter a new server address.
+
+## 3. More computers, lost computers, recovery
+
+- **Add another computer:** Security → Owner connections → **Add another
+  computer…**. The new key pair is created on your computer and only the
+  public key is sent to the backend. Save the file, move it to the other
+  computer (USB stick, `scp`) and import it there as in step 2.
+- **Remove a computer:** Security → Owner connections → **Remove**. Its
+  sessions end immediately and it cannot reconnect. The last connection
+  cannot be removed from the app, so you cannot lock yourself out.
+- **On the server** (recovery, e.g. if every Owner computer is gone):
 
 ```bash
 cd backend
-npm run owner:setup-token              # print the current token
-npm run owner:setup-token -- --rotate  # generate a new one (old one stops working)
+npm run owner:connection -- --name "Laptop"                    # writes data/owner-connection.json
+npm run owner:connection -- --url https://api.example.org --out /tmp/owner.json
+npm run owner:connection -- --revoke-all --name "New laptop"   # remove all others first (key leaked)
 ```
 
-The token works once. After a successful claim the backend deletes the file,
-and the `/owner/auth/claim` endpoint returns `409` from then on. If the host
-is not on your machine, copy the token over a secure channel (for example an
-SSH session). Do not paste it into chats or tickets.
+The command works while the backend is running.
 
-## 3. Claim the backend
+## 4. Day-to-day security
 
-1. Start Polaris Owner (`dist/Polaris-Owner-1.0.0.AppImage`, or `npm start`
-   in `apps/owner`).
-2. Enter the backend URL without `/api/v1`, e.g. `https://api.example.org`.
-   Use **Test connection** to check it.
-3. The app detects that the backend is unclaimed and shows **Claim this
-   backend**. Enter:
-   - the setup token,
-   - an owner username (3–20 letters, digits, underscore; it must not be
-     taken by a community account),
-   - a password with **at least 14 characters** that does not contain the
-     username. The strength meter must reach at least "Fair". A long passphrase
-     works best.
-4. The backend answers `201`, creates the owner and signs you in. The app
-   then opens **Settings** so you can enable 2FA right away.
-
-## 4. Enable two-factor authentication (do this immediately)
-
-Settings → Account & 2FA → **Set up 2FA**:
-
-1. Scan the QR code with an authenticator app (Aegis, 2FAS, 1Password,
-   Google Authenticator …). The app generates the QR code locally, so the
-   secret never leaves your machine through a third-party service. You can
-   also type the secret by hand or expand the `otpauth://` URL.
-2. Enter the current 6-digit code → **Verify and enable**. A wrong code
-   returns `422` and nothing changes.
-3. Store the 8 **recovery codes** offline (Copy all / Save as file…). Each
-   code works once in place of an authenticator code at sign-in. You can type
-   them with or without the dash. They are shown only once.
-
-From now on, signing in needs your username, password and an authenticator
-or recovery code. Optionally, enable **Require owner 2FA** in Backend
-Management. After that, 2FA can no longer be disabled from the app.
-
-If you lose both your authenticator and your recovery codes, you can only
-recover access on the backend host by restoring a backup or editing the
-database directly. Keep the recovery codes safe.
-
-## 5. Day-to-day security
-
-- **Sessions:** Settings → Sessions (and Security) list every owner session
-  with IP, client and expiry. Revoke anything you don't recognise. Owner
-  sessions last 12 hours by default (Backend Management → *Owner session*,
-  1–72 h).
-- **Sign-in history:** Settings → Sign-in history (your own) and Security →
-  Sign-in history (all users, including failed and non-owner attempts at the
-  owner scope).
-- **Password change:** Settings → Change password. This signs out your other
-  sessions.
-- **Token storage:** the app encrypts the session token with the OS keyring
-  (`safeStorage`). Without a keyring the token is kept in memory only, and
-  you sign in after every restart. It is never written in plaintext.
+- **Security** lists every owner connection (computer, ID, last used, last
+  IP), every owner session, and every rejected attempt (unknown key, wrong
+  signature, replayed challenge, revoked connection).
+- **Owner sessions** last 12 hours by default (Backend Management → *Owner
+  session*, 1–72 h). The app renews them silently.
+- **Session token storage:** encrypted with the OS keyring. Without a keyring
+  it is kept in memory only (a new session is created silently on the next
+  start). It is never written in plaintext.
+- Back up `data/` (database incl. the public keys of the connections) as
+  described below. The private keys exist only on the Owner computers.
 
 ## 6. Signing key and trust.json
 

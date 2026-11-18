@@ -5,7 +5,7 @@
                  │ Express 5 · node:sqlite · Ed25519 signing key · uploads in /files (sandbox CSP)         │
                  │ /api/v1/auth  /community  /social  /reports  /cloud  /feedback  /bundles  /owner/*      │
                  └───────▲──────────────────────────▲─────────────────────────────▲───────────────────────┘
-       user-scope token  │                          │ owner-scope token + 2FA      │ export-static / GitHub publisher
+       user-scope token  │                          │ owner key → owner session    │ export-static / GitHub publisher
                  ┌───────┴────────┐        ┌────────┴────────┐          ┌────────┴──────────────────────────┐
                  │ Polaris Client │        │  Polaris Owner  │          │ GitHub Pages: Community Hub        │
                  │ (public)       │        │  (private app)  │          │ /kirka-client/ + /data/*.json      │
@@ -53,7 +53,7 @@
 ## Backend (`backend`)
 
 - `app.js` builds the context (database, keys, audit, config service, publisher) and the routers.
-- `auth/` handles password hashing (scrypt), sessions with `user`/`owner` scopes, TOTP 2FA, recovery codes, owner claim via a one-time setup token, and rate limits.
+- `auth/` handles password hashing (scrypt), sessions with `user`/`owner` scopes, TOTP 2FA and recovery codes for community accounts, owner connections (`owner-devices.js`: Ed25519 challenge/response, no owner password) and rate limits.
 - `community/` covers items, likes, comments, downloads, categories, friends, blocks, messages, groups, presence and notifications.
 - `admin/` contains the owner API: configuration draft/test/publish/rollback, news, announcements, releases, assets, moderation, users, reports, analytics, backups, database browser and audit log.
 - `services/config-service.js` handles domain versions and signed envelopes. `services/publishing.js` does static export and GitHub commits.
@@ -65,4 +65,4 @@ A static site with no runtime dependencies. `scripts/build.js` renders 16 pages 
 
 ## Polaris Owner (private)
 
-A separate Electron app (`io.polaris.owner`) that only talks to `/owner/*`. Every privileged action is authorized by the backend (owner scope + role, 2FA, session expiry, audit log). It isn't distributed with the public client.
+A separate Electron app (`io.polaris.owner`) that only talks to `/owner/*`. It has no login: it holds the private key of a registered owner connection (encrypted with the OS keyring), signs a one-time challenge from `GET /owner/auth/challenge` and gets an owner session from `POST /owner/auth/connect`. Every privileged request is authorized by the backend: owner scope + owner role + a session bound to a non-revoked connection, with session expiry and the audit log. A public client can't become owner, because it has no registered key and the owner account has no password. The Owner app isn't distributed with the public client.

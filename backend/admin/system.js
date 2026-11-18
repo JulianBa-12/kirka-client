@@ -248,9 +248,8 @@ function createOwnerSystemRoutes(ctx) {
       rateLimits: s.optional(s.object({ auth: s.int({ min: 1, max: 1000 }), api: s.int({ min: 10, max: 10000 }), upload: s.int({ min: 1, max: 1000 }) })),
       uploadLimits: s.optional(s.object({ maxBytes: s.int({ min: 64 * 1024, max: 64 * 1024 * 1024 }), maxAvatarBytes: s.int({ min: 32 * 1024, max: 8 * 1024 * 1024 }) })),
       sessionTtlHours: s.optional(s.object({ user: s.int({ min: 1, max: 24 * 90 }), owner: s.int({ min: 1, max: 72 }) })),
-      requireOwner2fa: s.optional(s.bool()), communityChat: s.optional(s.bool()),
+      communityChat: s.optional(s.bool()),
     }), req.body);
-    if (b.requireOwner2fa && !req.user.totp_enabled) throw E.badRequest('Enable two-factor authentication on your own account before requiring it');
     const out = settings.update(b);
     audit(req, 'system.settings_updated', null, b);
     res.json({ settings: out });
@@ -259,7 +258,7 @@ function createOwnerSystemRoutes(ctx) {
   r.get('/security', (_req, res) => {
     const owner = db.get("SELECT * FROM users WHERE role = 'owner'");
     res.json({
-      owner: { twoFactorEnabled: !!(owner && owner.totp_enabled), username: owner && owner.username },
+      owner: { username: owner && owner.username },
       ownerSessions: owner ? db.all("SELECT * FROM sessions WHERE user_id = ? AND scope = 'owner' AND revoked_at IS NULL AND expires_at > ? ORDER BY last_seen_at DESC", owner.id, now()).map((x) => ({ id: x.id, ip: x.ip, userAgent: x.user_agent, createdAt: x.created_at, lastSeenAt: x.last_seen_at, expiresAt: x.expires_at })) : [],
       failedLogins24h: db.get('SELECT COUNT(*) AS n FROM login_history WHERE success = 0 AND at > ?', daysAgo(1)).n,
       recentFailures: db.all('SELECT at, username, ip, reason, scope FROM login_history WHERE success = 0 ORDER BY id DESC LIMIT 30'),

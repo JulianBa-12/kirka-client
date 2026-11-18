@@ -26,6 +26,12 @@ function createAuthMiddleware(ctx) {
   function requireOwner(req, _res, next) {
     if (!req.user) return next(E.unauthorized());
     if (req.session.scope !== 'owner' || req.user.role !== 'owner') return next(E.forbidden('Owner session required'));
+    // Owner sessions are bound to a trusted Polaris Owner installation (see owner-devices.js).
+    if (!ctx.ownerDevices || !ctx.ownerDevices.sessionDeviceActive(req.session, req.user.id)) {
+      const e = E.unauthorized('This owner session does not belong to a trusted Polaris Owner device');
+      e.code = 'device_required';
+      return next(e);
+    }
     next();
   }
   return { authenticate, requireUser, requireOwner };

@@ -350,6 +350,24 @@ CREATE TABLE daily_activity (
 CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 `,
   },
+  {
+    version: 2,
+    name: 'owner connections (device keys)',
+    sql: `
+CREATE TABLE owner_devices (
+  id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  public_key TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  last_used_at TEXT,
+  last_ip TEXT,
+  revoked_at TEXT
+);
+CREATE INDEX idx_owner_devices_user ON owner_devices(user_id);
+ALTER TABLE sessions ADD COLUMN device_id TEXT;
+`,
+  },
 ];
 
 function migrate(db, log) {

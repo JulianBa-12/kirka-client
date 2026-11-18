@@ -2,6 +2,12 @@
 
 All notable changes to Polaris Client are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- Polaris Owner no longer has a login. It opens the Owner Dashboard directly and authenticates silently with an owner connection: an Ed25519 key registered on the backend and stored encrypted on the owner's computer. The setup token, owner claim, owner password login and owner 2FA were removed. The owner account has no password; `/auth/login` refuses it.
+- New backend endpoints `GET /owner/auth/challenge`, `POST /owner/auth/connect` and `/owner/devices` (list, add, rename, revoke). New server command `npm run owner:connection`. The first connection is written to `data/owner-connection.json` on first start.
+
 ## [1.0.0] — 2026-11-18
 
 First public release. See [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md).

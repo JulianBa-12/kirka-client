@@ -10,13 +10,13 @@ function createSessions(ctx) {
   const { db, settings } = ctx;
   const touched = new Map(); // sessionId -> last write ms (throttle writes)
 
-  function create(user, scope, req, client) {
+  function create(user, scope, req, client, deviceId) {
     const ttlH = settings.get().sessionTtlHours[scope === 'owner' ? 'owner' : 'user'];
     const token = randomToken(32);
     const id = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + ttlH * 3600 * 1000).toISOString();
-    db.run('INSERT INTO sessions (id, user_id, token_hash, scope, client, ip, user_agent, created_at, last_seen_at, expires_at) VALUES (?,?,?,?,?,?,?,?,?,?)',
-      id, user.id, sha256(token), scope, client || null, req.ip, String(req.get('user-agent') || '').slice(0, 300), now(), now(), expiresAt);
+    db.run('INSERT INTO sessions (id, user_id, token_hash, scope, client, ip, user_agent, created_at, last_seen_at, expires_at, device_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+      id, user.id, sha256(token), scope, client || null, req.ip, String(req.get('user-agent') || '').slice(0, 300), now(), now(), expiresAt, deviceId || null);
     return { token, expiresAt, id };
   }
 

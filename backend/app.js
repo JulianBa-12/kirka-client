@@ -11,6 +11,8 @@ const { createStorage } = require('./services/storage');
 const { createConfigService, loadSigningKey } = require('./services/config-service');
 const { createPublisher, createBackups, applyPendingRestore } = require('./services/publishing');
 const { createSessions } = require('./auth/sessions');
+const { createOwnerDevices, createOwnerDeviceRoutes, createConnection, writeConnectionFile } = require('./auth/owner-devices');
+const { hashPassword } = require('./auth/crypto');
 const { createAuthMiddleware } = require('./auth/middleware');
 const { createAuthRoutes, createOwnerAuthRoutes } = require('./auth/routes');
 const { createPublicRoutes, createCloudRoutes } = require('./api/public');
@@ -33,6 +35,7 @@ function createContext(cfg) {
   ctx.storage = createStorage(cfg);
   ctx.configService = createConfigService(ctx);
   ctx.sessions = createSessions(ctx);
+  ctx.ownerDevices = createOwnerDevices(ctx);
   ctx.mw = createAuthMiddleware(ctx);
   ctx.social = createSocialHelpers(db);
   ctx.items = createContent(ctx);
@@ -43,7 +46,7 @@ function createContext(cfg) {
 }
 
 function seed(ctx) {
-  const { db, cfg, log, configService } = ctx;
+  const { db, cfg, log, configService, audit } = ctx;
   if (!db.get("SELECT id FROM community_groups WHERE slug = 'lobby'")) {
     db.run("INSERT INTO community_groups (slug, name, description, visibility, official, created_at) VALUES ('lobby', 'Community lobby', 'The public Polaris community chat.', 'public', 1, ?)", now());
   }
@@ -55,15 +58,21 @@ function seed(ctx) {
   });
   if (stale) configService.rebuildAll();
 
-  const tokenFile = path.join(cfg.dataDir, 'owner-setup-token');
-  const owner = db.get("SELECT id FROM users WHERE role = 'owner'");
-  if (owner) { if (fs.existsSync(tokenFile)) fs.unlinkSync(tokenFile); return; }
-  let token;
-  if (fs.existsSync(tokenFile)) token = fs.readFileSync(tokenFile, 'utf8').trim();
-  else { token = crypto.randomBytes(24).toString('base64url'); fs.writeFileSync(tokenFile, token + '\n', { mode: 0o600 }); }
-  ctx.setupToken = token;
-  log.warn('No owner account exists yet. Claim it from the Polaris Owner app with this one-time setup token (also stored in data/owner-setup-token):');
-  process.stdout.write(`\n    OWNER SETUP TOKEN: ${token}\n\n`);
+  // Owner access works only through owner connections (device keys), never a password.
+  // On the very first start the server creates the first connection file for the owner.
+  const legacyToken = path.join(cfg.dataDir, 'owner-setup-token');
+  if (fs.existsSync(legacyToken)) fs.unlinkSync(legacyToken);
+  const connFile = path.join(cfg.dataDir, 'owner-connection.json');
+  const hasDevice = db.get('SELECT id FROM owner_devices WHERE revoked_at IS NULL');
+  if (!hasDevice) {
+    const conn = createConnection(db, hashPassword, { backendUrl: cfg.publicUrl, name: 'First owner connection' });
+    writeConnectionFile(connFile, conn);
+    audit(null, 'owner.device.added', conn.deviceId, { name: conn.name, via: 'first start' });
+    log.warn(`Owner connection created: ${connFile}`);
+    log.warn('Copy this file to the computer that runs Polaris Owner (see docs/OWNER_SETUP.md), then delete it here. Anyone with this file has owner access.');
+  } else if (fs.existsSync(connFile)) {
+    log.warn(`${connFile} still exists. Delete it once Polaris Owner has imported it.`);
+  }
 }
 
 function createApp(ctx) {
@@ -118,6 +127,7 @@ function createApp(ctx) {
   api.use('/owner/auth', createOwnerAuthRoutes(ctx, authApi));
   const owner = express.Router();
   owner.use(mw.requireOwner);
+  owner.use(createOwnerDeviceRoutes(ctx));
   owner.use(createOwnerContentRoutes(ctx));
   owner.use(createOwnerSystemRoutes(ctx));
   api.use('/owner', owner);

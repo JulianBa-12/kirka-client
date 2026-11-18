@@ -19,10 +19,18 @@ process.env.POLARIS_PUBLIC_URL = `http://127.0.0.1:${PORT}`;
 const cfg = require('../config');
 const { createContext, createApp } = require('../app');
 const { verifyEnvelope } = require('../../shared/utilities/signing');
-const { totpAt } = require('../auth/crypto');
 
 let server, base, ctx;
 const T = {};
+const crypto = require('crypto');
+const { deviceMessage } = require('../auth/owner-devices');
+
+/** Signs in like Polaris Owner does: challenge → signature with the connection's private key. */
+async function ownerConnect(conn, { nonce } = {}) {
+  const ch = nonce ? { nonce } : (await call('GET', '/owner/auth/challenge', { expect: 200 })).data;
+  const signature = crypto.sign(null, deviceMessage(ch.nonce, conn.deviceId), crypto.createPrivateKey(conn.privateKey)).toString('base64');
+  return call('POST', '/owner/auth/connect', { body: { deviceId: conn.deviceId, nonce: ch.nonce, signature } });
+}
 
 async function call(method, url, { token, body, form, expect } = {}) {
   const headers = {};
@@ -72,17 +80,25 @@ test('health, keys and signed bundles', async () => {
   await call('GET', '/does-not-exist', { expect: 404 });
 });
 
-test('owner claim requires the setup token and is single use', async () => {
+test('first start creates an owner connection; owner access needs its private key', async () => {
+  const file = path.join(dataDir, 'owner-connection.json');
+  assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+  T.conn = JSON.parse(fs.readFileSync(file, 'utf8'));
+  assert.equal(T.conn.format, 'polaris-owner-connection/1');
+  assert.equal(T.conn.backendUrl, `http://127.0.0.1:${PORT}`);
   const st = await call('GET', '/owner/auth/status', { expect: 200 });
-  assert.equal(st.data.claimed, false);
-  await call('POST', '/owner/auth/claim', { body: { setupToken: 'x'.repeat(32), username: 'owner', password: 'a-very-long-password-1' }, expect: 401 });
-  const token = fs.readFileSync(path.join(dataDir, 'owner-setup-token'), 'utf8').trim();
-  await call('POST', '/owner/auth/claim', { body: { setupToken: token, username: 'owner', password: 'short' }, expect: 422 });
-  const c = await call('POST', '/owner/auth/claim', { body: { setupToken: token, username: 'owner', password: 'Northern-Star-Pass-2026' }, expect: 201 });
+  assert.equal(st.data.claimed, true); assert.equal(st.data.method, 'device-key');
+  // there is no password login, claim or setup token for the owner any more
+  for (const p of ['/owner/auth/login', '/owner/auth/claim']) {
+    const r = await call('POST', p, { body: { username: 'owner', password: 'anything-at-all-1' } });
+    assert.ok([401, 404].includes(r.status), `${p} → ${r.status}`); assert.equal(r.data.token, undefined);
+  }
+  const c = await ownerConnect(T.conn);
+  assert.equal(c.status, 200); assert.equal(c.data.user.role, 'owner'); assert.equal(c.data.device.id, T.conn.deviceId);
   T.owner = c.data.token;
-  assert.equal(fs.existsSync(path.join(dataDir, 'owner-setup-token')), false);
-  await call('POST', '/owner/auth/claim', { body: { setupToken: token, username: 'owner2', password: 'Northern-Star-Pass-2026' }, expect: 409 });
-  assert.equal((await call('GET', '/owner/auth/status')).data.claimed, true);
+  // a restart does not create another connection
+  const again = createContext(cfg); again.db.close();
+  assert.equal(JSON.parse(fs.readFileSync(file, 'utf8')).deviceId, T.conn.deviceId);
 });
 
 test('normal users cannot reach the owner API', async () => {
@@ -91,11 +107,8 @@ test('normal users cannot reach the owner API', async () => {
   T.aliceId = r.data.user.id;
   await call('GET', '/owner/overview', { expect: 401 });
   await call('GET', '/owner/overview', { token: T.alice, expect: 403 });
-  // the owner's user-scope login cannot use the owner API either
-  const u = await call('POST', '/auth/login', { body: { username: 'owner', password: 'Northern-Star-Pass-2026', client: 'client' }, expect: 200 });
-  await call('GET', '/owner/overview', { token: u.data.token, expect: 403 });
-  await call('POST', '/owner/auth/login', { body: { username: 'alice', password: 'Kirka-Sniper-Pw7' }, expect: 403 });
-  await call('POST', '/owner/auth/login', { body: { username: 'owner', password: 'wrong-password-xx' }, expect: 401 });
+  // the owner account has no password login in the public client either
+  await call('POST', '/auth/login', { body: { username: 'owner', password: 'Northern-Star-Pass-2026', client: 'client' }, expect: 401 });
   const o = await call('GET', '/owner/overview', { token: T.owner, expect: 200 });
   assert.equal(o.data.users.total, 2);
 });
@@ -110,20 +123,46 @@ test('user account: me, privacy, sessions, password', async () => {
   T.bob = bob.data.token;
 });
 
-test('owner 2FA enrolment and TOTP-protected login', async () => {
-  const setup = await call('POST', '/auth/2fa/setup', { token: T.owner, expect: 200 });
-  const secret = setup.data.secret;
-  const code = () => totpAt(secret, Math.floor(Date.now() / 30000));
-  await call('POST', '/auth/2fa/enable', { token: T.owner, body: { code: '000000' }, expect: 422 });
-  const en = await call('POST', '/auth/2fa/enable', { token: T.owner, body: { code: code() }, expect: 200 });
-  assert.equal(en.data.recoveryCodes.length, 8);
-  const noCode = await call('POST', '/owner/auth/login', { body: { username: 'owner', password: 'Northern-Star-Pass-2026' } });
-  assert.equal(noCode.status, 401); assert.equal(noCode.data.error.code, 'totp_required');
-  const ok = await call('POST', '/owner/auth/login', { body: { username: 'owner', password: 'Northern-Star-Pass-2026', totp: code() }, expect: 200 });
-  T.owner = ok.data.token;
+test('owner connections: forged, replayed, unknown and revoked keys are refused', async () => {
+  // unknown key
+  const { privateKey } = crypto.generateKeyPairSync('ed25519');
+  const fake = { deviceId: 'abcdef0123456789', privateKey: privateKey.export({ format: 'pem', type: 'pkcs8' }) };
+  assert.equal((await ownerConnect(fake)).status, 403);
+  // right device id, wrong key (forged)
+  const forged = await ownerConnect({ ...T.conn, privateKey: fake.privateKey });
+  assert.equal(forged.status, 401); assert.equal(forged.data.error.code, 'device_signature');
+  // replayed challenge
+  const ch = (await call('GET', '/owner/auth/challenge', { expect: 200 })).data;
+  assert.equal((await ownerConnect(T.conn, { nonce: ch.nonce })).status, 200);
+  const replay = await ownerConnect(T.conn, { nonce: ch.nonce });
+  assert.equal(replay.status, 401); assert.equal(replay.data.error.code, 'device_challenge');
+  // add a second computer from the Owner app: only the public key is sent
+  const second = crypto.generateKeyPairSync('ed25519');
+  const pub = second.publicKey.export({ format: 'der', type: 'spki' }).toString('base64');
+  const added = await call('POST', '/owner/devices', { token: T.owner, body: { publicKey: pub, name: 'Desktop' }, expect: 201 });
+  await call('POST', '/owner/devices', { token: T.owner, body: { publicKey: pub, name: 'Desktop' }, expect: 409 });
+  await call('POST', '/owner/devices', { token: T.owner, body: { publicKey: 'AAAA'.repeat(11), name: 'x' }, expect: 422 });
+  const conn2 = { deviceId: added.data.id, privateKey: second.privateKey.export({ format: 'pem', type: 'pkcs8' }) };
+  const s2 = await ownerConnect(conn2);
+  assert.equal(s2.status, 200);
+  const list = await call('GET', '/owner/devices', { token: T.owner, expect: 200 });
+  assert.equal(list.data.items.length, 2); assert.equal(list.data.items.filter((d) => d.current).length, 1);
+  // revoking ends that device's sessions immediately and blocks reconnecting
+  await call('GET', '/owner/overview', { token: s2.data.token, expect: 200 });
+  await call('DELETE', `/owner/devices/${conn2.deviceId}`, { token: T.owner, expect: 200 });
+  await call('GET', '/owner/overview', { token: s2.data.token, expect: 401 });
+  const rev = await ownerConnect(conn2);
+  assert.equal(rev.status, 403); assert.equal(rev.data.error.code, 'device_revoked');
+  // the last connection cannot be removed from the app
+  await call('DELETE', `/owner/devices/${T.conn.deviceId}`, { token: T.owner, expect: 409 });
+  // the server CLI can always create a new connection (recovery), also while the server runs
+  const { execFileSync } = require('child_process');
+  const out = path.join(dataDir, 'cli-connection.json');
+  execFileSync(process.execPath, ['--disable-warning=ExperimentalWarning', path.join(__dirname, '..', 'scripts', 'owner-connection.js'), '--name', 'Recovery', '--out', out], { env: { ...process.env, POLARIS_DATA_DIR: dataDir }, encoding: 'utf8' });
+  const conn3 = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert.equal((await ownerConnect(conn3)).status, 200);
   const sec = await call('GET', '/owner/security', { token: T.owner, expect: 200 });
-  assert.equal(sec.data.owner.twoFactorEnabled, true);
-  assert.ok(sec.data.failedLogins24h >= 1);
+  assert.ok(sec.data.failedLogins24h >= 3);
 });
 
 test('configuration: validate, draft, publish, signed bundle, rollback', async () => {
