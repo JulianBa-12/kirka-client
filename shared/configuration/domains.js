@@ -7,10 +7,10 @@
  */
 const { s, validate } = require('../utilities/schema');
 const { sanitizeCss } = require('../utilities/css-sanitize');
-const { DEFAULTS, BUNDLE_TARGETS, CLIENT_DESTINATIONS, HOME_WIDGETS } = require('./defaults');
+const { DEFAULTS, BUNDLE_TARGETS, CLIENT_DESTINATIONS, HOME_WIDGETS, DOMAIN_APPLY } = require('./defaults');
 
 const FONTS = ['Satoshi', 'JetBrains Mono', 'system-ui', 'Inter', 'Arial', 'Georgia'];
-const ICONS = ['home', 'play', 'sliders', 'brush', 'box', 'store', 'users', 'chart', 'film', 'gauge', 'layers', 'cube', 'map', 'plug', 'download', 'gear', 'globe', 'star', 'bell', 'shield', 'flag', 'heart', 'bolt', 'crosshair', 'image', 'message', 'compass'];
+const ICONS = ['home', 'play', 'sliders', 'brush', 'box', 'store', 'users', 'chart', 'film', 'gauge', 'layers', 'cube', 'map', 'plug', 'download', 'gear', 'globe', 'star', 'bell', 'shield', 'flag', 'heart', 'bolt', 'crosshair', 'image', 'message', 'compass', 'image', 'palette', 'eye', 'bookmark', 'grid', 'archive', 'activity', 'search', 'clock', 'database', 'code', 'key', 'server', 'info'];
 const DESTS = CLIENT_DESTINATIONS.map((d) => d.id);
 const id = (max = 64) => s.string({ min: 1, max, pattern: /^[a-zA-Z0-9_-]+$/ });
 const text = (max = 200) => s.string({ max });
@@ -132,6 +132,15 @@ const ITEM_SCHEMAS = {
   crosshair: s.object({ format: s.enum(['polaris-crosshair/1']), name: s.string({ min: 1, max: 40 }), crosshair }),
   hud: s.object({ format: s.enum(['polaris-hud/1']), name: s.string({ min: 1, max: 40 }), elements: s.record(hudElement, { maxKeys: 32 }) }),
   theme: s.object({ format: s.enum(['polaris-theme/1']), theme: clientTheme }),
+  workspace: s.object({
+    format: s.enum(['polaris-workspace/1']), name: s.string({ min: 1, max: 40 }),
+    workspace: s.object({
+      nav: s.object({ order: s.array(s.enum(DESTS), { max: 40 }), hidden: s.array(s.enum(DESTS), { max: 40 }) }),
+      home: s.object({ order: s.array(s.enum(HOME_WIDGETS.map((w) => w.id)), { max: 20 }), hidden: s.array(s.enum(HOME_WIDGETS.map((w) => w.id)), { max: 20 }) }),
+      quickAccess: s.array(s.string({ min: 1, max: 48, pattern: /^[a-z0-9:._-]+$/i }), { max: 12 }),
+      toolsOpen: s.optional(s.bool(), false),
+    }),
+  }),
   plugin: s.object({
     format: s.enum(['polaris-plugin/1']),
     manifest: s.object({
@@ -169,4 +178,7 @@ function validateDomain(domain, data) {
   return errors.length ? { ok: false, errors, value: undefined } : r;
 }
 
-module.exports = { ITEM_SCHEMAS, PLUGIN_PERMISSIONS, DOMAINS, SCHEMAS, DEFAULTS, BUNDLE_TARGETS, validateDomain, FONTS, ICONS };
+/** 'live' | 'restart' for a domain (see DOMAIN_APPLY in defaults.js). */
+const applyMode = (domain) => DOMAIN_APPLY[domain] || 'live';
+
+module.exports = { ITEM_SCHEMAS, PLUGIN_PERMISSIONS, DOMAINS, SCHEMAS, DEFAULTS, BUNDLE_TARGETS, DOMAIN_APPLY, applyMode, validateDomain, FONTS, ICONS };

@@ -4,6 +4,8 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { EventEmitter } = require('events');
+const { createRealtime } = require('./realtime/hub');
 const { Database, now } = require('./database/db');
 const { migrate } = require('./database/migrations');
 const { createLogger, HttpError, createRateLimiter, createSettings, createAudit, E } = require('./services/core');
@@ -28,8 +30,16 @@ function createContext(cfg) {
   const db = new Database(cfg.dbFile);
   migrate(db, log);
   const ctx = { cfg, db, log };
+  ctx.events = new EventEmitter();
+  ctx.events.setMaxListeners(50);
   ctx.settings = createSettings(db);
-  ctx.audit = createAudit(db);
+  const writeAudit = createAudit(db);
+  // Every audited change is also published on the event bus (realtime hub, live owner feed).
+  ctx.audit = (req, action, target, details) => {
+    writeAudit(req, action, target, details);
+    const u = req && req.user;
+    try { ctx.events.emit('audit', { at: new Date().toISOString(), actor: u ? u.username : 'system', action, target: target == null ? null : String(target), details: details || null }); } catch (e) { log.warn('audit listener failed', { error: e.message }); }
+  };
   ctx.rate = createRateLimiter();
   ctx.keys = loadSigningKey(cfg, log);
   ctx.storage = createStorage(cfg);
@@ -37,10 +47,11 @@ function createContext(cfg) {
   ctx.sessions = createSessions(ctx);
   ctx.ownerDevices = createOwnerDevices(ctx);
   ctx.mw = createAuthMiddleware(ctx);
-  ctx.social = createSocialHelpers(db);
+  ctx.social = createSocialHelpers(db, ctx.events);
   ctx.items = createContent(ctx);
   ctx.publisher = createPublisher(ctx);
   ctx.backups = createBackups(ctx);
+  ctx.realtime = createRealtime(ctx);
   seed(ctx);
   return ctx;
 }
@@ -96,7 +107,7 @@ function createApp(ctx) {
     setHeaders: (res) => res.set({ 'Content-Security-Policy': "sandbox; default-src 'none'; img-src 'self'; style-src 'unsafe-inline'", 'X-Content-Type-Options': 'nosniff' }),
   }));
 
-  app.get('/', (_req, res) => res.json({ name: 'Polaris backend', version: cfg.version, api: '/api/v1', health: '/api/v1/health' }));
+  app.get('/', (_req, res) => res.json({ name: 'Polaris backend', version: cfg.version, api: '/api/v1', health: '/api/v1/health', realtime: '/api/v1/realtime' }));
 
   const api = express.Router();
   api.use(express.json({ limit: '1mb' }));
@@ -130,6 +141,7 @@ function createApp(ctx) {
   owner.use(createOwnerDeviceRoutes(ctx));
   owner.use(createOwnerContentRoutes(ctx));
   owner.use(createOwnerSystemRoutes(ctx));
+  owner.use(ctx.realtime.ownerRoutes());
   api.use('/owner', owner);
   api.use('/users', social.users);
   api.use('/social', social.social);

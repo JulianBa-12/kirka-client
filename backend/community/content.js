@@ -7,12 +7,12 @@ const { E, check, sha256 } = require('../services/core');
 const { publicUser, activeRestrictions } = require('../auth/sessions');
 const { paging } = require('../api/public');
 
-const KINDS = ['skin', 'background', 'resource', 'crosshair', 'hud', 'theme', 'plugin'];
+const KINDS = ['skin', 'background', 'resource', 'crosshair', 'hud', 'theme', 'workspace', 'plugin'];
 const ALLOWED = {
   skin: ['image/png'],
   background: ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'video/webm'],
   resource: ['image/png', 'image/jpeg', 'image/webp', 'audio/ogg', 'audio/wav', 'audio/mpeg', 'model/gltf-binary', 'model/gltf+json'],
-  crosshair: ['application/json'], hud: ['application/json'], theme: ['application/json'], plugin: ['application/json'],
+  crosshair: ['application/json'], hud: ['application/json'], theme: ['application/json'], workspace: ['application/json'], plugin: ['application/json'],
 };
 const ROLE_RANK = { user: 1, moderator: 2, admin: 3, owner: 4 };
 
@@ -221,7 +221,7 @@ function createFeedbackRoutes(ctx) {
   r.get('/', (req, res) => {
     const { limit, offset } = paging(req.query);
     const type = req.query.type === 'bug' ? 'bug' : req.query.type === 'suggestion' ? 'suggestion' : null;
-    const where = []; const params = [];
+    const where = ["type IN ('bug', 'suggestion')"]; const params = []; // contact messages are private (owner only)
     if (type) { where.push('type = ?'); params.push(type); }
     if (typeof req.query.status === 'string' && req.query.status) { where.push('status = ?'); params.push(req.query.status); }
     const w = where.length ? `WHERE ${where.join(' AND ')}` : '';
@@ -233,22 +233,24 @@ function createFeedbackRoutes(ctx) {
   r.post('/', (req, res) => {
     if (req.user) rate(`fb:${req.user.id}`, 10, 3600000); else rate(`fb-anon:${req.ip}`, 3, 3600000);
     const b = check(s.object({
-      type: s.enum(['bug', 'suggestion']), title: s.string({ min: 5, max: 120 }), body: s.string({ min: 10, max: 5000 }),
+      type: s.enum(['bug', 'suggestion', 'contact']), title: s.string({ min: 5, max: 120 }), body: s.string({ min: 10, max: 5000 }),
       version: s.optional(s.nullable(s.string({ max: 20 })), null), os: s.optional(s.nullable(s.string({ max: 60 })), null), contact: s.optional(s.nullable(s.string({ max: 120 })), null),
     }), req.body);
     const { id } = db.run('INSERT INTO feedback (type, title, body, version, os, contact, author_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?)',
       b.type, b.title.trim(), b.body.trim(), b.version, b.os, b.contact, req.user ? req.user.id : null, now(), now());
+    if (ctx.events) ctx.events.emit('feedback', { id, type: b.type, title: b.title.trim() });
+    if (b.type === 'contact') return res.status(201).json({ id, type: 'contact', status: 'open', received: true });
     res.status(201).json(serialize(db.get('SELECT * FROM feedback WHERE id = ?', id), req.user && req.user.id));
   });
 
   r.post('/:id/vote', ctx.mw.requireUser, (req, res) => {
-    const f = db.get('SELECT * FROM feedback WHERE id = ?', parseInt(req.params.id, 10) || 0);
+    const f = db.get("SELECT * FROM feedback WHERE id = ? AND type IN ('bug', 'suggestion')", parseInt(req.params.id, 10) || 0);
     if (!f) throw E.notFound('Not found');
     db.run('INSERT INTO feedback_votes (feedback_id, user_id) VALUES (?,?) ON CONFLICT DO NOTHING', f.id, req.user.id);
     res.json(serialize(f, req.user.id));
   });
   r.delete('/:id/vote', ctx.mw.requireUser, (req, res) => {
-    const f = db.get('SELECT * FROM feedback WHERE id = ?', parseInt(req.params.id, 10) || 0);
+    const f = db.get("SELECT * FROM feedback WHERE id = ? AND type IN ('bug', 'suggestion')", parseInt(req.params.id, 10) || 0);
     if (!f) throw E.notFound('Not found');
     db.run('DELETE FROM feedback_votes WHERE feedback_id = ? AND user_id = ?', f.id, req.user.id);
     res.json(serialize(f, req.user.id));

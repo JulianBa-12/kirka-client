@@ -8,9 +8,11 @@ const server = app.listen(cfg.port, cfg.host, () => {
   ctx.log.info(`Polaris backend ${cfg.version} listening on http://${cfg.host}:${cfg.port} (public URL ${cfg.publicUrl})`, { signingKey: ctx.keys.keyId });
 });
 server.requestTimeout = 120000;
+ctx.realtime.attach(server);
 
 function shutdown(sig) {
   ctx.log.info(`received ${sig}, shutting down`);
+  ctx.realtime.close();
   server.close(() => { try { ctx.db.close && ctx.db.close(); } catch {} process.exit(0); });
   setTimeout(() => process.exit(1), 5000).unref();
 }

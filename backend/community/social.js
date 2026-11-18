@@ -5,12 +5,16 @@ const { json, now } = require('../database/db');
 const { E, check } = require('../services/core');
 const { publicUser, activeRestrictions, DEFAULT_PRIVACY } = require('../auth/sessions');
 
-function createSocialHelpers(db) {
+function createSocialHelpers(db, events = null) {
   const pair = (a, b) => (a < b ? [a, b] : [b, a]);
   const areFriends = (a, b) => { const [x, y] = pair(a, b); return !!db.get('SELECT 1 AS ok FROM friendships WHERE user_a = ? AND user_b = ?', x, y); };
   const isBlocked = (a, b) => !!db.get('SELECT 1 AS ok FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)', a, b, b, a);
   const privacy = (u) => ({ ...DEFAULT_PRIVACY, ...json.parse(u.privacy, {}) });
-  const notify = (userId, type, title, body, link) => db.run('INSERT INTO notifications (user_id, type, title, body, link, created_at) VALUES (?,?,?,?,?,?)', userId, type, title, body || '', link || null, now());
+  const notify = (userId, type, title, body, link) => {
+    const r = db.run('INSERT INTO notifications (user_id, type, title, body, link, created_at) VALUES (?,?,?,?,?,?)', userId, type, title, body || '', link || null, now());
+    if (events) events.emit('notification', { userId, type, title, body: body || '', link: link || null });
+    return r;
+  };
   const userByName = (username) => db.get("SELECT * FROM users WHERE username = ? AND status = 'active'", username);
   /** Presence is only revealed to the user themself, friends, or everyone if the profile is public. */
   const viewUser = (u, viewerId) => {
@@ -23,7 +27,7 @@ function createSocialHelpers(db) {
 
 function createSocialRoutes(ctx) {
   const { db, mw, settings, rate } = ctx;
-  const h = createSocialHelpers(db);
+  const h = ctx.social || createSocialHelpers(db, ctx.events);
   const users = express.Router();
   const social = express.Router();
   const misc = express.Router();
@@ -278,6 +282,7 @@ function createSocialRoutes(ctx) {
       if (m.to_id !== req.user.id && m.from_id !== req.user.id) throw E.forbidden('You can only report messages in your own conversations');
     }
     const { id } = db.run('INSERT INTO reports (reporter_id, target_type, target_id, reason, details, created_at) VALUES (?,?,?,?,?,?)', req.user.id, b.targetType, b.targetId, b.reason, b.details, now());
+    if (ctx.events) ctx.events.emit('report', { id, targetType: b.targetType, targetId: b.targetId, reason: b.reason, reporter: req.user.username });
     res.status(201).json({ id, status: 'open' });
   });
 

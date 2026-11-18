@@ -56,24 +56,37 @@ const CLIENT_THEME = {
 const CLIENT_DESTINATIONS = [
   { id: 'home', label: 'Home', icon: 'home', description: 'Your dashboard' },
   { id: 'play', label: 'Play', icon: 'play', description: 'Launch Kirka.io' },
-  { id: 'customization', label: 'Customization', icon: 'sliders', description: 'HUD, crosshair, backgrounds, themes' },
-  { id: 'skins', label: 'Skin Studio', icon: 'brush', description: 'Pixel editor and skin library' },
   { id: 'inventory', label: 'Inventory', icon: 'box', description: 'Your local cosmetics' },
-  { id: 'marketplace', label: 'Marketplace', icon: 'store', description: 'Community cosmetics and resources' },
-  { id: 'social', label: 'Social', icon: 'users', description: 'Friends, messages, groups' },
-  { id: 'analytics', label: 'Analytics', icon: 'chart', description: 'Sessions and match history' },
-  { id: 'replays', label: 'Replays', icon: 'film', description: 'Recordings and bookmarks' },
+  { id: 'skins', label: 'Skin Studio', icon: 'brush', description: 'Pixel editor and skin library' },
+  { id: 'backgrounds', label: 'Backgrounds', icon: 'image', description: 'Menu backgrounds and rotation' },
+  { id: 'maps', label: 'Map Studio', icon: 'map', description: 'Map library and visual presets' },
+  { id: 'resources', label: 'Weapon Studio', icon: 'cube', description: 'Weapon textures and resource swaps' },
   { id: 'performance', label: 'Performance', icon: 'gauge', description: 'FPS, frame time, resources' },
-  { id: 'profiles', label: 'Profiles', icon: 'layers', description: 'Smart configuration profiles' },
-  { id: 'resources', label: 'Resources', icon: 'cube', description: 'Weapon textures and resource swaps' },
-  { id: 'maps', label: 'Maps', icon: 'map', description: 'Map library and visual presets' },
+  { id: 'hud', label: 'HUD Editor', icon: 'sliders', description: 'Position and style HUD overlays' },
+  { id: 'crosshair', label: 'Crosshair Studio', icon: 'crosshair', description: 'Custom crosshair overlay' },
+  { id: 'analytics', label: 'Match Analytics', icon: 'chart', description: 'Sessions and match history' },
+  { id: 'replays', label: 'Replay Studio', icon: 'film', description: 'Recordings and bookmarks' },
+  { id: 'social', label: 'Social', icon: 'users', description: 'Friends, messages, groups' },
+  { id: 'marketplace', label: 'Marketplace', icon: 'store', description: 'Community cosmetics and resources' },
   { id: 'plugins', label: 'Plugins', icon: 'plug', description: 'Approved extensions' },
+  { id: 'customization', label: 'Themes & Style', icon: 'palette', description: 'Themes and game style' },
+  { id: 'lab', label: 'Visual Lab', icon: 'eye', description: 'Live preview and side-by-side comparison' },
+  { id: 'gallery', label: 'Creator Gallery', icon: 'star', description: 'Top community creations by type' },
+  { id: 'journal', label: 'Session Journal', icon: 'bookmark', description: 'Sessions, notes and personal history' },
+  { id: 'profiles', label: 'Profiles', icon: 'layers', description: 'Smart configuration profiles' },
+  { id: 'workspace', label: 'Workspaces', icon: 'grid', description: 'Menu layout, widgets and quick access' },
+  { id: 'automation', label: 'Automation', icon: 'bolt', description: 'Local rules that switch profiles and workspaces' },
+  { id: 'backups', label: 'Backup Vault', icon: 'archive', description: 'Snapshots, history and restore' },
+  { id: 'diagnostics', label: 'Diagnostics', icon: 'activity', description: 'Checks, logs and fixes' },
   { id: 'updates', label: 'Updates', icon: 'download', description: 'Update Center' },
   { id: 'settings', label: 'Settings', icon: 'gear', description: 'Client preferences' },
   { id: 'hub', label: 'Community Hub', icon: 'globe', description: 'News, guides and support' },
 ];
 
-const DEFAULT_NAV_ORDER = ['home', 'play', 'customization', 'skins', 'inventory', 'marketplace', 'social', 'analytics', 'replays', 'settings', 'hub'];
+/** Tools: reachable from the collapsible Tools group and the Command Center. */
+const CLIENT_TOOLS = ['customization', 'lab', 'gallery', 'journal', 'profiles', 'workspace', 'automation', 'backups', 'diagnostics', 'updates'];
+
+const DEFAULT_NAV_ORDER = ['home', 'play', 'inventory', 'skins', 'backgrounds', 'maps', 'resources', 'performance', 'hud', 'crosshair', 'analytics', 'replays', 'social', 'marketplace', 'plugins', 'settings', 'hub'];
 
 const CLIENT_NAVIGATION = {
   items: CLIENT_DESTINATIONS.map((d) => ({
@@ -84,7 +97,7 @@ const CLIENT_NAVIGATION = {
     description: d.description,
     visible: DEFAULT_NAV_ORDER.includes(d.id),
     order: DEFAULT_NAV_ORDER.includes(d.id) ? DEFAULT_NAV_ORDER.indexOf(d.id) : 50 + CLIENT_DESTINATIONS.indexOf(d),
-    group: ['settings', 'hub', 'updates'].includes(d.id) ? 'footer' : 'main',
+    group: ['settings', 'hub'].includes(d.id) ? 'footer' : 'main',
   })),
 };
 
@@ -105,6 +118,17 @@ const CLIENT_FEATURES = {
     adblock: { enabled: true, visible: true, beta: false, label: 'Ad filtering', description: 'Block third-party ad networks inside the game view.' },
     discordPresence: { enabled: false, visible: true, beta: true, label: 'Discord presence', description: 'Show Polaris activity on Discord.' },
     autoUpdate: { enabled: true, visible: true, beta: false, label: 'Automatic updates', description: 'Download verified updates in the background.' },
+    mapStudio: { enabled: true, visible: true, beta: false, label: 'Map Studio', description: 'Map library, notes and local visual presets.' },
+    commandCenter: { enabled: true, visible: true, beta: false, label: 'Command Center', description: 'Search and run every feature from one keyboard palette (Ctrl+K).' },
+    smartSetup: { enabled: true, visible: true, beta: false, label: 'Smart Setup', description: 'First-start assistant with hardware-based recommendations.' },
+    workspaces: { enabled: true, visible: true, beta: false, label: 'Workspaces', description: 'Personal menu order, widgets and quick access.' },
+    visualLab: { enabled: true, visible: true, beta: false, label: 'Visual Lab', description: 'Live preview and side-by-side comparison of visual settings.' },
+    creatorGallery: { enabled: true, visible: true, beta: false, label: 'Creator Gallery', description: 'Top community creations grouped by type.' },
+    sessionJournal: { enabled: true, visible: true, beta: false, label: 'Session Journal', description: 'Sessions with notes, favorites and history.' },
+    profileAutomation: { enabled: true, visible: true, beta: false, label: 'Profile Automation', description: 'Local rules that switch profiles and workspaces.' },
+    backupVault: { enabled: true, visible: true, beta: false, label: 'Backup Vault', description: 'Automatic and manual snapshots with integrity checks.' },
+    diagnostics: { enabled: true, visible: true, beta: false, label: 'Diagnostics', description: 'Checks for connection, configuration and version problems.' },
+    liveUpdates: { enabled: true, visible: true, beta: false, label: 'Live configuration', description: 'Receive published changes instantly over the realtime connection.' },
   },
 };
 
@@ -228,9 +252,10 @@ const COMMUNITY_SETTINGS = {
     crosshair: ['Static', 'Animated'],
     hud: ['Competitive', 'Casual'],
     theme: ['Dark', 'Light', 'Colorful'],
+    workspace: ['Player', 'Creator', 'Minimal'],
     plugin: ['Interface', 'Utility', 'Social', 'Statistics'],
   },
-  uploadPermissions: { skin: 'user', background: 'user', resource: 'user', crosshair: 'user', hud: 'user', theme: 'user', plugin: 'user' },
+  uploadPermissions: { skin: 'user', background: 'user', resource: 'user', crosshair: 'user', hud: 'user', theme: 'user', workspace: 'user', plugin: 'user' },
   requireApproval: true,
   marketplaceRules: 'All Polaris marketplace items are free community creations. Polaris does not sell, trade or process Kirka.io items, KC, coins or any official game currency. Upload only work you created or have permission to share.',
   marketplaceFeatured: [],
@@ -267,10 +292,11 @@ const WEBSITE_SITE = {
     { label: 'Resources', href: 'resources.html', visible: true },
     { label: 'Plugins', href: 'plugins.html', visible: true },
     { label: 'Guides', href: 'guides.html', visible: true },
+    { label: 'Docs', href: 'documentation.html', visible: true },
     { label: 'Support', href: 'support.html', visible: true },
   ],
   hero: {
-    eyebrow: 'Polaris Client 1.0',
+    eyebrow: 'Polaris Client 1.1',
     title: 'Kirka.io, on your own terms.',
     body: 'Polaris is an independent desktop client for Kirka.io. It runs the official game in a focused window and adds the things players actually ask for: a crosshair studio, a HUD editor, a pixel skin editor, performance tooling and a community to share it all with.',
     primaryCta: { label: 'Download for Linux', href: 'downloads.html' },
@@ -296,17 +322,19 @@ const WEBSITE_SITE = {
     support: { title: 'Support', body: 'Most problems are solved by the troubleshooting steps below. If yours is not, file a bug report with your client version and the log file from Settings → Advanced → Logs.' },
     guides: { title: 'Guides', body: '' },
     discord: { title: 'Discord', body: 'Join the Polaris Discord for release previews, support and skin drops.', inviteUrl: '' },
+    documentation: { title: 'Documentation', body: '' },
+    contact: { title: 'Contact', body: 'Questions about Polaris, press requests or a security problem? Pick the channel that fits. Please do not send Kirka.io account or purchase questions here: Polaris is not affiliated with Kirka.io and cannot help with official accounts, KC or items.' },
   },
   downloads: {
     showDeb: true,
-    installNotes: 'chmod +x Polaris-Client-1.0.0.AppImage\n./Polaris-Client-1.0.0.AppImage',
+    installNotes: 'chmod +x Polaris-Client-1.1.0.AppImage\n./Polaris-Client-1.1.0.AppImage',
   },
   footer: {
     note: 'Polaris is an unofficial community project and is not affiliated with Kirka.io.',
     columns: [
       { title: 'Client', links: [{ label: 'Downloads', href: 'downloads.html' }, { label: 'Changelog', href: 'changelog.html' }, { label: 'Features', href: 'features.html' }] },
       { title: 'Community', links: [{ label: 'Skin gallery', href: 'skins.html' }, { label: 'Resources', href: 'resources.html' }, { label: 'Plugins', href: 'plugins.html' }, { label: 'Discord', href: 'discord.html' }] },
-      { title: 'Help', links: [{ label: 'Guides', href: 'guides.html' }, { label: 'Support', href: 'support.html' }, { label: 'Bug reports', href: 'bugs.html' }, { label: 'Suggestions', href: 'suggestions.html' }] },
+      { title: 'Help', links: [{ label: 'Guides', href: 'guides.html' }, { label: 'Support', href: 'support.html' }, { label: 'Bug reports', href: 'bugs.html' }, { label: 'Suggestions', href: 'suggestions.html' }, { label: 'Documentation', href: 'documentation.html' }, { label: 'Contact', href: 'contact.html' }] },
     ],
   },
   discordUrl: '',
@@ -334,11 +362,25 @@ const DEFAULTS = {
 };
 
 /** Which domains are delivered in which signed bundle. */
+/**
+ * How a published change reaches running clients.
+ *   live    — applied immediately when the client receives the new bundle (realtime or poll)
+ *   restart — stored immediately, but some values only take effect after the client restarts
+ * Changes to program code are never delivered through configuration; they need a release
+ * (Update Center: signed manifest, SHA-512 check, rollback).
+ */
+const DOMAIN_APPLY = {
+  'client.theme': 'live', 'client.navigation': 'live', 'client.features': 'live', 'client.home': 'live',
+  'client.performance': 'restart', 'client.hud': 'live', 'client.crosshairs': 'live', 'client.backgrounds': 'live',
+  'client.profiles': 'live', 'client.css': 'live', 'client.updates': 'live', 'community.settings': 'live',
+  'website.theme': 'live', 'website.site': 'live', 'website.css': 'live',
+};
+
 const BUNDLE_TARGETS = {
   client: ['client.theme', 'client.navigation', 'client.features', 'client.home', 'client.performance', 'client.hud', 'client.crosshairs', 'client.backgrounds', 'client.profiles', 'client.css', 'client.updates', 'community.settings'],
   website: ['website.theme', 'website.site', 'website.css', 'community.settings'],
 };
 
 module.exports = {
-  DEFAULTS, BUNDLE_TARGETS, CLIENT_DESTINATIONS, HOME_WIDGETS, HUD_ELEMENTS, CROSSHAIR_DEFAULT,
+  DEFAULTS, BUNDLE_TARGETS, CLIENT_DESTINATIONS, CLIENT_TOOLS, HOME_WIDGETS, HUD_ELEMENTS, CROSSHAIR_DEFAULT, DOMAIN_APPLY,
 };
