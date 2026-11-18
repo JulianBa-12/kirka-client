@@ -78,7 +78,7 @@ function render() {
     h('dt', { class: 'pl-label' }, 'Channel'), h('dd', null, 'stable'),
     h('dt', { class: 'pl-label' }, 'Published'), h('dd', null, h('time', { datetime: stable.publishedAt }, fmt.date(stable.publishedAt))),
     h('dt', { class: 'pl-label' }, 'Platform'), h('dd', null, 'Linux x86-64'),
-    stable.minimumVersion ? [h('dt', { class: 'pl-label' }, 'Updates from'), h('dd', null, `${stable.minimumVersion} or later`)] : null,
+    stable.minimumVersion ? [h('dt', { class: 'pl-label' }, 'Minimum supported'), h('dd', null, `${stable.minimumVersion} or later`)] : null,
     h('dt', { class: 'pl-label' }, 'Manifest'), h('dd', null, `signed · #${manifest.sequence || 0}`));
 
   // ---------------------------------------------------- files table

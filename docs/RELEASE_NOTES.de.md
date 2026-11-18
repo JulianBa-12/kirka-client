@@ -9,7 +9,7 @@ Polaris 1.1 bringt ein Command Center, eine geführte Einrichtung, Workspaces un
 | `Polaris-Client-1.1.0.AppImage` | Jede x86-64-Linux-Distribution. Ausführbar machen und starten. |
 | `Polaris-Client-1.1.0.deb` | Debian, Ubuntu und Derivate. |
 
-Jede Datei steht mit Größe und SHA-512 im signierten Release-Manifest. Die SHA-256-Prüfsummen findest du auch auf der [Download-Seite](https://julianba-12.github.io/kirka-client/downloads.html).
+Jede Datei steht mit Größe und SHA-512 im signierten Release-Manifest und auf der [Download-Seite](https://julianba-12.github.io/kirka-client/downloads.html). SHA-256-Prüfsummen stehen in `SHA256SUMS.txt` im GitHub-Release.
 
 ## Update von 1.0.0: ein manueller Schritt
 
