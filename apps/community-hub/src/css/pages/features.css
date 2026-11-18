@@ -1,0 +1,37 @@
+/* Features: index column + two-column definition list. */
+.feat { padding-block: clamp(32px, 4vw, 64px) var(--section-y); }
+.feat .grid { row-gap: var(--sp-10); }
+.feat__index { display: none; }
+.feat__index > .pl-label { color: var(--c-label); margin-bottom: var(--sp-4); }
+.feat__index ol { list-style: none; border-top: var(--bw) solid var(--c-line-strong); }
+.feat__index li { border-bottom: var(--bw) solid var(--c-line); }
+.feat__index a { display: flex; gap: var(--sp-3); align-items: baseline; padding: var(--sp-3) 0; text-decoration: none; font-weight: 500; font-size: var(--fs-md); color: var(--c-text2); }
+.feat__index a:hover { color: var(--c-text); }
+.feat__index .pl-mono { color: var(--c-text3); font-size: var(--fs-xs); }
+.feat__index a:hover .pl-mono { color: var(--c-accent); }
+
+.feat__list { display: grid; grid-template-columns: minmax(0, 1fr); border-top: 2px solid var(--c-text); }
+.feat__item { display: grid; gap: var(--sp-3); padding: var(--sp-8) 0 var(--sp-10); border-bottom: var(--bw) solid var(--c-line); scroll-margin-top: calc(var(--header-h) + 24px); }
+.feat__item dt { display: grid; gap: var(--sp-3); }
+.feat__num { color: var(--c-accent); font-size: var(--fs-sm); }
+.feat__name { font-size: clamp(26px, 2.8vw, 38px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; }
+.feat__item dd { color: var(--c-text2); font-size: var(--fs-lede); line-height: 1.5; max-width: 40ch; }
+@media (min-width: 760px) {
+  .feat__list { grid-template-columns: 1fr 1fr; column-gap: var(--col-gap); }
+}
+@media (min-width: 1000px) {
+  .feat__index { display: block; grid-column: 1 / span 3; position: sticky; top: calc(var(--header-h) + 32px); align-self: start; padding-top: var(--sp-2); }
+  .feat__list { grid-column: 5 / -1; }
+}
+
+.feat-rules { background: var(--c-surface); border-top: 0; }
+.feat-rules .grid { row-gap: var(--sp-8); }
+.feat-rules__list { list-style: none; display: grid; gap: 0; border-top: var(--bw) solid var(--c-line-strong); }
+.feat-rules__list li { padding: var(--sp-5) 0; border-bottom: var(--bw) solid var(--c-line); color: var(--c-text2); font-size: var(--fs-lg); }
+.feat-rules__list strong { color: var(--c-text); font-weight: 700; }
+.feat-rules__cta { display: flex; flex-wrap: wrap; gap: var(--sp-6); align-items: center; }
+@media (min-width: 1000px) {
+  .feat-rules__head { grid-column: 1 / span 4; }
+  .feat-rules__list { grid-column: 5 / -1; }
+  .feat-rules__cta { grid-column: 5 / -1; }
+}

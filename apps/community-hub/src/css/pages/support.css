@@ -1,0 +1,23 @@
+/* Support: FAQ column + help side rail. */
+.support__lede { max-width: 60ch; }
+.support__lede p { color: var(--c-text2); }
+.support { padding-block: clamp(32px, 4vw, 64px) var(--section-y); row-gap: var(--sp-12); }
+.faq { border-top: 2px solid var(--c-text); }
+.faq details { border-bottom: var(--bw) solid var(--c-line); }
+.faq summary { position: relative; cursor: pointer; list-style: none; padding: var(--sp-5) var(--sp-10) var(--sp-5) 0; font-size: var(--fs-lg); font-weight: 700; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; position: absolute; right: 0; top: 50%; transform: translateY(-50%); font: 400 22px/1 var(--font-mono); color: var(--c-accent); }
+.faq details[open] summary::after { content: "−"; }
+.faq summary:hover { color: var(--c-accent); }
+.faq .prose { padding-bottom: var(--sp-6); color: var(--c-text2); font-size: 16px; }
+.help-list { list-style: none; border-top: var(--bw) solid var(--c-line-strong); }
+.help-list a { display: grid; gap: 2px; padding: var(--sp-4) 0; border-bottom: var(--bw) solid var(--c-line); text-decoration: none; }
+.help-list a strong::after { content: " →"; color: var(--c-accent); }
+.help-list span { color: var(--c-text2); font-size: var(--fs-md); }
+.status-box { margin-top: var(--sp-10); display: grid; gap: var(--sp-4); }
+.status-box > .pl-label { color: var(--c-label); }
+.status-box dd { font-size: var(--fs-sm); }
+@media (min-width: 1000px) {
+  .support__faq { grid-column: 1 / span 7; }
+  .support__side { grid-column: 9 / -1; }
+}

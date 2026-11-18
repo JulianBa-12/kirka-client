@@ -1,0 +1,73 @@
+/* News: dated index with one lead story; article view. */
+.news-head__count { display: grid; gap: var(--sp-2); justify-items: start; }
+.news-head__count .pl-mono { font-size: clamp(40px, 5vw, 72px); font-weight: 700; line-height: 1; letter-spacing: -0.04em; }
+.news-head__count .pl-label { color: var(--c-label); }
+@media (min-width: 900px) { .news-head__count { justify-items: end; text-align: right; } }
+
+.news-body { padding-bottom: var(--section-y); }
+.news-filter__label { color: var(--c-label); }
+
+.news-lead {
+  display: grid; gap: var(--sp-6); grid-template-columns: minmax(0, 1fr);
+  padding-block: clamp(32px, 4vw, 64px); border-bottom: var(--bw) solid var(--c-line-strong);
+}
+.news-lead__date { display: none; }
+.news-lead__day { display: block; font: 700 clamp(64px, 7vw, 112px)/0.85 var(--font-mono); letter-spacing: -0.06em; color: var(--c-accent); }
+.news-lead__date .pl-label { display: block; margin-top: var(--sp-3); color: var(--c-label); }
+.news-lead__main { display: grid; gap: var(--sp-5); align-content: start; }
+.news-lead__title { font-size: clamp(34px, 4.8vw, 72px); font-weight: 900; letter-spacing: -0.035em; line-height: 0.98; }
+.news-lead__title a { text-decoration: none; }
+.news-lead__excerpt { font-size: var(--fs-lede); color: var(--c-text2); max-width: 54ch; }
+.news-lead__cover { border: var(--bw) solid var(--c-line); }
+.news-lead__tags { align-content: start; }
+@media (min-width: 900px) {
+  .news-lead { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); }
+  .news-lead__date { display: block; grid-column: 1 / span 2; }
+  .news-lead__main { grid-column: 3 / span 7; }
+  .news-lead__tags { grid-column: 10 / -1; justify-content: flex-end; }
+  .news-lead__cover { grid-column: 3 / span 7; grid-row: 2; }
+}
+
+.news-index { list-style: none; }
+.news-row { display: grid; gap: var(--sp-2) var(--col-gap); grid-template-columns: minmax(0, 1fr); padding-block: var(--sp-6); border-bottom: var(--bw) solid var(--c-line); }
+.news-row__title { font-size: var(--fs-h3); font-weight: 700; letter-spacing: -0.015em; }
+.news-row__title a { text-decoration: none; }
+.news-row__excerpt { margin-top: var(--sp-2); color: var(--c-text2); max-width: 64ch; }
+.news-row__tags { align-content: start; }
+@media (min-width: 900px) {
+  .news-row { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .news-row__date { grid-column: 1 / span 2; padding-top: 4px; }
+  .news-row__main { grid-column: 3 / span 7; }
+  .news-row__tags { grid-column: 10 / -1; justify-content: flex-end; }
+}
+.news-more { padding-top: var(--sp-8); }
+
+a.tag { text-decoration: none; }
+a.tag:hover { color: var(--c-accent); border-color: var(--c-accent); }
+
+/* article */
+.article__head .page-head__label { flex-wrap: wrap; }
+.article__back { color: var(--c-text); text-decoration: none; }
+.article__back:hover { color: var(--c-accent); }
+.article__title { font-size: clamp(38px, 5.6vw, 84px); }
+.article__cover { margin-top: clamp(32px, 4vw, 56px); }
+.article__cover img { width: 100%; border: var(--bw) solid var(--c-line); }
+.article__grid { padding-block: clamp(40px, 5vw, 80px) var(--section-y); row-gap: var(--sp-10); }
+.article__aside { display: grid; gap: var(--sp-5); align-content: start; }
+.article__aside dd { text-align: left; }
+.article__aside .spec { grid-template-columns: 1fr; }
+.article__aside .spec > dt { border-bottom: 0; padding-bottom: 0; }
+.article__tags { justify-content: flex-start; }
+@media (min-width: 1000px) {
+  .article__titles { grid-column: 1 / span 10; }
+  .article__aside { grid-column: 1 / span 3; position: sticky; top: calc(var(--header-h) + 24px); }
+  .article__body { grid-column: 5 / span 7; }
+}
+
+.article-nav { border-top: var(--bw) solid var(--c-line); }
+.article-nav__inner { display: grid; grid-template-columns: 1fr 1fr; }
+.article-nav__link { display: grid; gap: var(--sp-2); padding-block: var(--sp-8); text-decoration: none; }
+.article-nav__link .pl-label { color: var(--c-label); }
+.article-nav__link--next { text-align: right; border-left: var(--bw) solid var(--c-line); padding-left: var(--sp-6); }
+.article-nav__link:not(.article-nav__link--next) { padding-right: var(--sp-6); }
+.article-nav__title { font-weight: 700; font-size: var(--fs-lg); }

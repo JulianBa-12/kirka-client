@@ -1,0 +1,9 @@
+node_modules/
+dist/
+apps/*/dist/
+apps/*/src/shared/
+backend/data/
+backend/.env
+*.log
+.DS_Store
+/apps/owner/

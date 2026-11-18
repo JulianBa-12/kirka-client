@@ -1,0 +1,94 @@
+{
+  "items": [
+    {
+      "id": 5,
+      "version": "1.1.0-beta.1",
+      "channel": "beta",
+      "title": "Map presets preview",
+      "publishedAt": "2026-11-17T12:30:00.000Z",
+      "rollout": 50,
+      "minimumVersion": "1.0.0",
+      "notes": "- New **Maps** view with per-map visual presets.\n- Plugin permission prompts are clearer.\n- Fixed the session timer resetting after a reconnect.",
+      "files": [
+        {
+          "platform": "linux-appimage",
+          "name": "Polaris-Client-1.1.0-beta.1.AppImage",
+          "url": "https://github.com/JulianBa-12/kirka-client/releases/download/v1.1.0-beta.1/Polaris-Client-1.1.0-beta.1.AppImage",
+          "size": 106000000,
+          "sha512": "OlHzYhy8H+pYkPWkmyY9YGs3f3g+pQiRh6lCnbOWzUztwwVI38D2AFiUBSynkG8zG9jMMNVw/06hfnQ8bjwjOw=="
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "version": "1.0.0",
+      "channel": "stable",
+      "title": "First stable release",
+      "publishedAt": "2026-11-14T16:00:00.000Z",
+      "rollout": 100,
+      "minimumVersion": "1.0.0",
+      "notes": "## Highlights\n\n- **Crosshair Studio** with seven official presets, outlines, T-style and animated styles.\n- **HUD Editor**: drag FPS, latency, session timer and clock overlays; restyle the supported game UI.\n- **Skin Studio**: layered pixel editor for 64×64 and 128×128 templates with undo history.\n- **Performance Center** with Performance, Balanced and Quality profiles.\n\n## Updates\n\nThe client now downloads signed update manifests and refuses any manifest whose signature does not match the key compiled into the client.\n\n## Known issues\n\n- Replay Studio is still marked beta. Long recordings on slow disks can drop frames.\n- Discord presence is off by default.",
+      "files": [
+        {
+          "platform": "linux-appimage",
+          "name": "Polaris-Client-1.0.0.AppImage",
+          "url": "https://github.com/JulianBa-12/kirka-client/releases/download/v1.0.0/Polaris-Client-1.0.0.AppImage",
+          "size": 108169216,
+          "sha512": "pEOm5NWMWwNkBNw58WAyFLbiGDsPww5YqD6MxNSkUwvbxVjwTSZ1h69w8LHdVlwZ2m689qYi6YLdcv14rA00cg=="
+        },
+        {
+          "platform": "linux-deb",
+          "name": "polaris-client_1.0.0_amd64.deb",
+          "url": "https://github.com/JulianBa-12/kirka-client/releases/download/v1.0.0/polaris-client_1.0.0_amd64.deb",
+          "size": 71423202,
+          "sha512": "cSt1L6hEvRevx6kubS+PFJS4dGPdtyUhLzPhv3fl7aEHo/ExYGrF6FTqhtd/puqZYbjGcScDU5s/cGDgkgdfbA=="
+        },
+        {
+          "platform": "linux-appimage",
+          "name": "Polaris-Owner-1.0.0.AppImage",
+          "url": "https://github.com/JulianBa-12/kirka-client/releases/download/v1.0.0/Polaris-Owner-1.0.0.AppImage",
+          "size": 101000000,
+          "sha512": "hdkG4VqETjhyXMzd+qLeTSQhZFX6bSjPS08pYHOsdJdinrXp9eEM9fuOWvq1iPgbnx5Dk/xqkZ++7nuPYKbnQw=="
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "version": "0.9.2",
+      "channel": "beta",
+      "title": "Release candidate 2",
+      "publishedAt": "2026-10-30T18:00:00.000Z",
+      "rollout": 100,
+      "minimumVersion": "0.9.0",
+      "notes": "- Fixed the HUD editor snapping overlays to the wrong corner on ultrawide displays.\n- The update center shows download progress and verification state.\n- Reduced idle CPU usage of the launcher window.",
+      "files": [
+        {
+          "platform": "linux-appimage",
+          "name": "Polaris-Client-0.9.2.AppImage",
+          "url": "https://github.com/JulianBa-12/kirka-client/releases/download/v0.9.2/Polaris-Client-0.9.2.AppImage",
+          "size": 103000000,
+          "sha512": "F4C/pVZ1idSTaQM+POp1UxqMlAGZYOVf/Tf6yRJ3LcFe2eYwmulwmjuYzVXk4L007shhlOAv1yuWGCj7wJIoiw=="
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "version": "0.9.0",
+      "channel": "beta",
+      "title": "Public beta",
+      "publishedAt": "2026-10-02T15:00:00.000Z",
+      "rollout": 100,
+      "minimumVersion": "0.9.0",
+      "notes": "First public beta for Linux.\n\n- Crosshair overlay and HUD overlays.\n- Community marketplace (browse only).\n- Cloud sync for profiles.",
+      "files": [
+        {
+          "platform": "linux-appimage",
+          "name": "Polaris-Client-0.9.0.AppImage",
+          "url": "https://github.com/JulianBa-12/kirka-client/releases/download/v0.9.0/Polaris-Client-0.9.0.AppImage",
+          "size": 98000000,
+          "sha512": "RQ+BahYVSMd98H21XyZOH5Nmjil+3hxqCbXe727izTyGpsN5pm8TUdEOsfBFTwO1sY1RVolofnEwP38VH2eIBQ=="
+        }
+      ]
+    }
+  ]
+}

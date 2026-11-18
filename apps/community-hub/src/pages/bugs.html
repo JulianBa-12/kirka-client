@@ -1,0 +1,29 @@
+<!--@page {"title": "Bug reports", "description": "Report a problem with Polaris Client and follow known issues.", "css": ["feedback.css"], "js": "bugs.js"} -->
+<header class="page-head">
+  <div class="wrap">
+    <p class="page-head__label pl-label">Support · bug tracker</p>
+    <div class="grid">
+      <div class="page-head__main">
+        <h1 class="page-head__title">Bug reports</h1>
+        <p class="page-head__lede">Something broken in Polaris Client? File it here. Check the open list first — if it’s already reported, the details you add on Discord help more than a duplicate.</p>
+      </div>
+      <dl class="page-head__side spec">
+        <dt class="pl-label">Before filing</dt><dd><a href="support.html">Troubleshooting</a></dd>
+        <dt class="pl-label">Latest build</dt><dd data-bind="latest">—</dd>
+        <dt class="pl-label">Game issues</dt><dd>Report to Kirka.io</dd>
+      </dl>
+    </div>
+  </div>
+</header>
+<div class="wrap grid fb fb--bugs">
+  <section class="fb__form" aria-labelledby="bug-form-h">
+    <p class="sec-label pl-label"><span class="sec-label__num">01</span> File a report</p>
+    <h2 class="sec-title" id="bug-form-h">What went wrong?</h2>
+    <div data-bind="form"><div class="loading" role="status">Loading</div></div>
+  </section>
+  <section class="fb__list" aria-labelledby="bug-list-h">
+    <p class="sec-label pl-label"><span class="sec-label__num">02</span> Tracker</p>
+    <h2 class="sec-title" id="bug-list-h">Reported issues</h2>
+    <div data-bind="list"><div class="loading" role="status">Loading</div></div>
+  </section>
+</div>

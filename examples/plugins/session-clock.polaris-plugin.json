@@ -1,0 +1,18 @@
+{
+  "format": "polaris-plugin/1",
+  "manifest": {
+    "id": "session-clock",
+    "name": "Session clock",
+    "version": "1.0.0",
+    "author": "Polaris",
+    "description": "Shows the session length and measured FPS, and mirrors the time on the in-game overlay.",
+    "permissions": [
+      "ui.panel",
+      "storage",
+      "hud.overlay",
+      "game.events"
+    ],
+    "minClientVersion": "1.0.0"
+  },
+  "code": "// Session clock — example Polaris plugin.\n// Shows how long the current session has lasted, the measured FPS, and mirrors a short\n// line on the in-game overlay. Uses only: ui.panel, storage, hud.overlay, game.events.\nconst root = polaris.root;\nconst started = Date.now();\nlet fps = null;\nlet best = 0;\n\nconst title = document.createElement('div');\ntitle.style.cssText = 'font-weight:600;margin-bottom:6px';\ntitle.textContent = 'Session clock';\nconst line = document.createElement('div');\nline.style.cssText = 'font:22px/1.2 ui-monospace,monospace';\nconst sub = document.createElement('div');\nsub.style.cssText = 'opacity:.65;margin-top:4px';\nroot.append(title, line, sub);\n\npolaris.storage.get('bestFps').then((v) => { if (typeof v === 'number') best = v; });\n\npolaris.on('metrics', (m) => {\n  fps = m && typeof m.fps === 'number' ? m.fps : null;\n  if (fps && fps > best) { best = Math.round(fps); polaris.storage.set('bestFps', best); }\n});\npolaris.on('match', (m) => { if (m && m.started) polaris.notify('Match started — good luck'); });\n\nfunction tick() {\n  const s = Math.floor((Date.now() - started) / 1000);\n  const t = `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;\n  line.textContent = t;\n  sub.textContent = `${fps == null ? 'FPS not measured yet' : `${Math.round(fps)} fps now`} · best ${best || '—'}`;\n  polaris.hud.set(`⏱ ${t}`);\n}\ntick();\nsetInterval(tick, 1000);\n"
+}

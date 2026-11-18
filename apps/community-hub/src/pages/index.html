@@ -1,0 +1,27 @@
+<!--@page {"title": "", "description": "Polaris is an independent desktop client for Kirka.io: crosshair studio, HUD editor, pixel skin editor, performance tooling and a community to share it all.", "css": ["home.css", "catalog.css"], "js": "home.js", "nav": "index"} -->
+<section class="masthead" aria-labelledby="hero-title">
+  <div class="wrap">
+    <div class="masthead__rail">
+      <span class="pl-label">Unofficial desktop client for Kirka.io</span>
+      <span class="pl-label">Linux · AppImage · DEB</span>
+      <span class="pl-label" data-bind="rail-release">Release status loading</span>
+    </div>
+    <div class="grid masthead__grid">
+      <div class="masthead__copy">
+        <p class="masthead__eyebrow pl-label" data-hero="eyebrow">{{heroEyebrow}}</p>
+        <h1 class="masthead__title" id="hero-title" data-hero="title">{{heroTitle}}</h1>
+        <p class="masthead__body" data-hero="body">{{heroBody}}</p>
+        <div class="btn-row masthead__ctas">
+          <a class="btn btn--primary btn--lg pl-chamfer" href="{{heroPrimaryHref}}" data-hero="primary">{{heroPrimaryLabel}}</a>
+          <a class="btn btn--lg" href="{{heroSecondaryHref}}" data-hero="secondary">{{heroSecondaryLabel}}</a>
+        </div>
+      </div>
+      <aside class="masthead__release" aria-labelledby="build-label" data-bind="release">
+        <p class="pl-label" id="build-label">Current build</p>
+        <div class="loading" role="status">Reading release manifest</div>
+      </aside>
+    </div>
+    <figure class="masthead__figure" data-hero="figure" hidden></figure>
+  </div>
+</section>
+<div class="home-sections" data-bind="sections"></div>

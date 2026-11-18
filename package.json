@@ -1,0 +1,16 @@
+{
+  "name": "polaris",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Polaris — desktop client for Kirka.io, its self-hosted backend and the Community Hub website.",
+  "license": "MIT",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "postinstall": "npm --prefix apps/client install && npm --prefix backend install && npm --prefix apps/community-hub install",
+    "start": "npm --prefix apps/client start",
+    "build:linux": "npm --prefix apps/client run build:linux",
+    "build:site": "npm --prefix apps/community-hub run build",
+    "backend": "npm --prefix backend start",
+    "test": "npm --prefix backend test && npm --prefix apps/client test && npm --prefix apps/client run check && npm --prefix apps/community-hub test"
+  }
+}

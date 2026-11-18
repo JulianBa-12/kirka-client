@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en" data-motion="on">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' polaris-file: data: blob: https:; media-src 'self' polaris-file: blob:; font-src 'self'; connect-src 'self' polaris-file:; frame-src polaris-plugin:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Polaris Client</title>
+  <link rel="stylesheet" href="shared/design/base.css">
+  <link rel="stylesheet" href="styles/app.css">
+  <link rel="stylesheet" href="styles/views.css">
+  <style id="theme-vars"></style>
+  <style id="owner-css"></style>
+  <script src="shared/design/icons.js"></script>
+  <script src="shared/utilities/markdown.js"></script>
+  <script src="common/crosshair.js"></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div id="boot" class="boot" aria-live="polite">
+    <div class="boot-inner">
+      <svg viewBox="0 0 64 64" width="40" height="40" aria-hidden="true" class="boot-mark"><path fill="currentColor" d="M32 2 35.2 28.8 48 32 35.2 35.2 32 62 28.8 35.2 16 32 28.8 28.8Z"/><path fill="currentColor" opacity=".55" d="M44.5 11.5 46 18 52.5 19.5 46 21 44.5 27.5 43 21 36.5 19.5 43 18Z"/></svg>
+      <div class="boot-name">Polaris</div>
+      <div class="boot-bar"><span></span></div>
+      <div class="boot-step pl-mono" id="boot-step">Starting</div>
+    </div>
+  </div>
+
+  <header class="titlebar" id="titlebar">
+    <div class="tb-brand"><svg viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M32 2 35.2 28.8 48 32 35.2 35.2 32 62 28.8 35.2 16 32 28.8 28.8Z"/><path fill="currentColor" opacity=".55" d="M44.5 11.5 46 18 52.5 19.5 46 21 44.5 27.5 43 21 36.5 19.5 43 18Z"/></svg><span>Polaris</span></div>
+    <div class="tb-context" id="tb-context"></div>
+    <div class="tb-status" id="tb-status"></div>
+    <div class="tb-controls">
+      <button class="tb-btn" id="tb-play" title="Toggle game (F1)"></button>
+      <button class="tb-btn" id="tb-full" title="Fullscreen (F11)"></button>
+      <button class="tb-btn" id="tb-min" title="Minimize"></button>
+      <button class="tb-btn" id="tb-max" title="Maximize"></button>
+      <button class="tb-btn tb-close" id="tb-close" title="Close"></button>
+    </div>
+  </header>
+
+  <div class="shell" id="shell">
+    <nav class="rail" id="rail" aria-label="Main navigation"></nav>
+    <main class="stage" id="stage">
+      <div class="stage-bg" id="stage-bg" aria-hidden="true"></div>
+      <div class="view" id="view" tabindex="-1"></div>
+    </main>
+  </div>
+
+  <div id="plugin-dock" class="plugin-dock" aria-hidden="true"></div>
+  <div id="rec-indicator" class="rec-indicator" hidden></div>
+  <div id="modal-root" class="modal-root"></div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>

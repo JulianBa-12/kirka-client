@@ -1,0 +1,81 @@
+<!--@page {"title": "Support", "description": "Troubleshooting for Polaris Client and where to get help.", "css": ["support.css"], "js": "support.js"} -->
+<header class="page-head">
+  <div class="wrap">
+    <p class="page-head__label pl-label">Support · troubleshooting</p>
+    <div class="grid">
+      <div class="page-head__main">
+        <h1 class="page-head__title" data-bind="title">Support</h1>
+        <div class="page-head__lede prose support__lede" data-bind="body"></div>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="wrap grid support">
+  <section class="support__faq" aria-labelledby="faq-h">
+    <p class="sec-label pl-label"><span class="sec-label__num">01</span> Troubleshooting</p>
+    <h2 class="pl-sr" id="faq-h">Troubleshooting</h2>
+    <div class="faq">
+      <details>
+        <summary>The AppImage does not start</summary>
+        <div class="prose">
+          <p>Check that the file is executable: <code>chmod +x Polaris-Client-*.AppImage</code>. Start it from a terminal to see the error. If it mentions FUSE, install <code>libfuse2</code> (<code>sudo apt install libfuse2</code> on Ubuntu 22.04 and newer).</p>
+        </div>
+      </details>
+      <details>
+        <summary>The game view stays black or white</summary>
+        <div class="prose">
+          <p>This is almost always the graphics driver. Turn off hardware acceleration in <strong>Settings → Performance</strong>, restart Polaris, and update your GPU driver. If the game also fails in a normal browser, the problem is on Kirka.io’s side.</p>
+        </div>
+      </details>
+      <details>
+        <summary>Low or unstable FPS</summary>
+        <div class="prose">
+          <p>Switch to the <strong>Performance</strong> profile, which turns off interface animations and animated backgrounds. The Performance view shows frame time, CPU and memory so you can see what changed. Lower FPS while the window is in the background is expected.</p>
+        </div>
+      </details>
+      <details>
+        <summary>My crosshair or HUD overlay is not visible</summary>
+        <div class="prose">
+          <p>Check that the overlay is enabled in <strong>Customization</strong> and that its opacity is above zero. Restyled game UI elements depend on the game’s own interface; after a Kirka.io update some may stop matching until Polaris is updated.</p>
+        </div>
+      </details>
+      <details>
+        <summary>An update failed with a signature or checksum error</summary>
+        <div class="prose">
+          <p>Do not try to work around it. The client refuses updates that are not signed with the Polaris key or do not match their published checksum. Retry later; if it keeps failing, download the current build from the <a href="downloads.html">downloads page</a>, verify it with <code>sha512sum</code>, and file a <a href="bugs.html">bug report</a>.</p>
+        </div>
+      </details>
+      <details>
+        <summary>I can’t sign in to my Polaris account</summary>
+        <div class="prose">
+          <p>If two-factor authentication is on, enter the six-digit code or one of your recovery codes. After several failed attempts sign-in is rate-limited for about a minute. During maintenance, sign-in and community features are paused while downloads keep working.</p>
+        </div>
+      </details>
+      <details>
+        <summary>My upload doesn’t appear in the gallery</summary>
+        <div class="prose">
+          <p>Uploads are reviewed by moderators before they are public. You can see the status of your uploads on the <a href="community.html#profile">community page</a> while signed in.</p>
+        </div>
+      </details>
+      <details>
+        <summary>Where do I find the log file?</summary>
+        <div class="prose">
+          <p>In the client: <strong>Settings → Advanced → Logs</strong>. Attach it to bug reports — it contains no passwords or tokens.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+  <aside class="support__side" aria-label="Get help">
+    <p class="sec-label pl-label"><span class="sec-label__num">02</span> Get help</p>
+    <ul class="help-list">
+      <li><a href="bugs.html"><strong>Report a bug</strong><span>Something broken? Include your version and log.</span></a></li>
+      <li><a href="suggestions.html"><strong>Suggest a feature</strong><span>Vote on ideas or add your own.</span></a></li>
+      <li><a href="guides.html"><strong>Read the guides</strong><span>Install, verify, set up.</span></a></li>
+      <li><a href="discord.html"><strong>Ask on Discord</strong><span>Other players and the team.</span></a></li>
+    </ul>
+    <div class="status-box" data-bind="status">
+      <p class="pl-label">Service status</p>
+      <div class="loading" role="status">Checking</div>
+    </div>
+  </aside>
+</div>

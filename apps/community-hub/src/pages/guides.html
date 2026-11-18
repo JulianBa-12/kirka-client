@@ -1,0 +1,155 @@
+<!--@page {"title": "Guides", "description": "How to install, verify, update and set up Polaris Client: crosshair, HUD, skins, performance profiles and cloud sync.", "css": ["guides.css"], "js": "guides.js"} -->
+<header class="page-head">
+  <div class="wrap">
+    <p class="page-head__label pl-label">Guides · documentation</p>
+    <div class="grid">
+      <div class="page-head__main">
+        <h1 class="page-head__title" data-bind="title">Guides</h1>
+        <p class="page-head__lede">From first launch to a tuned setup. Short, practical, in the order most players need them.</p>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="wrap grid guides">
+  <nav class="guides__toc" aria-labelledby="toc-h">
+    <p class="pl-label" id="toc-h">On this page</p>
+    <ol>
+      <li><a href="#install"><span class="pl-mono">01</span>Install on Linux</a></li>
+      <li><a href="#verify"><span class="pl-mono">02</span>Verify a download</a></li>
+      <li><a href="#first-launch"><span class="pl-mono">03</span>First launch</a></li>
+      <li><a href="#crosshair"><span class="pl-mono">04</span>Crosshair Studio</a></li>
+      <li><a href="#hud"><span class="pl-mono">05</span>HUD Editor</a></li>
+      <li><a href="#skins"><span class="pl-mono">06</span>Skin Studio</a></li>
+      <li><a href="#performance"><span class="pl-mono">07</span>Performance</a></li>
+      <li><a href="#profiles"><span class="pl-mono">08</span>Smart Profiles</a></li>
+      <li><a href="#updates"><span class="pl-mono">09</span>Updates &amp; channels</a></li>
+      <li><a href="#sync"><span class="pl-mono">10</span>Account &amp; cloud sync</a></li>
+    </ol>
+  </nav>
+  <div class="guides__body">
+    <div class="prose guides__intro" data-bind="intro" hidden></div>
+
+    <section class="guide" id="install" aria-labelledby="install-h">
+      <p class="guide__num pl-mono">01</p>
+      <h2 id="install-h">Install on Linux</h2>
+      <div class="prose">
+        <p>Polaris ships as an <strong>AppImage</strong> that runs on most distributions, and as a <strong>DEB</strong> package for Debian, Ubuntu and their derivatives. Get the current build from the <a href="downloads.html">downloads page</a>.</p>
+        <h3>AppImage</h3>
+        <ol>
+          <li>Move the file somewhere permanent, for example <code>~/Applications</code>.</li>
+          <li>Make it executable: <code>chmod +x Polaris-Client-*.AppImage</code></li>
+          <li>Run it: <code>./Polaris-Client-*.AppImage</code></li>
+        </ol>
+        <p>If nothing happens and the terminal mentions FUSE, install <code>libfuse2</code> (on Ubuntu 22.04 and newer: <code>sudo apt install libfuse2</code>).</p>
+        <h3>DEB package</h3>
+        <p>Install with <code>sudo apt install ./polaris-client_*_amd64.deb</code>. Polaris then appears in your application menu.</p>
+      </div>
+    </section>
+
+    <section class="guide" id="verify" aria-labelledby="verify-h">
+      <p class="guide__num pl-mono">02</p>
+      <h2 id="verify-h">Verify a download</h2>
+      <div class="prose">
+        <p>The downloads page lists a SHA-512 checksum for every file. Before running a new download, compare it with what your system computes:</p>
+        <pre><code>sha512sum Polaris-Client-*.AppImage</code></pre>
+        <p>The long hexadecimal string must match the one on the downloads page exactly. If it doesn’t, delete the file and download it again from the official page.</p>
+        <p>You only need to do this for the first install. Afterwards the client verifies every update itself: update manifests are signed, and the client refuses any manifest whose signature does not match the key built into it.</p>
+      </div>
+    </section>
+
+    <section class="guide" id="first-launch" aria-labelledby="first-h">
+      <p class="guide__num pl-mono">03</p>
+      <h2 id="first-h">First launch</h2>
+      <div class="prose">
+        <p>Polaris opens on <strong>Home</strong>. Press <strong>Play</strong> to load the official Kirka.io website in the game view. You play with your normal Kirka.io account — Polaris never asks for your game password.</p>
+        <p>A Polaris account is optional. You only need one to upload to the marketplace, vote on suggestions, use Social or sync settings between machines.</p>
+      </div>
+    </section>
+
+    <section class="guide" id="crosshair" aria-labelledby="crosshair-h">
+      <p class="guide__num pl-mono">04</p>
+      <h2 id="crosshair-h">Crosshair Studio</h2>
+      <div class="prose">
+        <p>Open <strong>Customization → Crosshair</strong>. Start from one of the official presets (Polaris, Classic White, Dot only, Ring, T-Style, North Star, Pulse) and adjust shape, size, thickness, gap, colour, outline and centre dot. The preview updates live.</p>
+        <ul>
+          <li><strong>Export</strong> saves the crosshair as a JSON file you can share or upload to the <a href="resources.html?kind=crosshair">resource library</a>.</li>
+          <li><strong>Import</strong> loads a crosshair JSON from someone else.</li>
+          <li>Animated styles look nice in menus but a static crosshair is easier to read in fights.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="guide" id="hud" aria-labelledby="hud-h">
+      <p class="guide__num pl-mono">05</p>
+      <h2 id="hud-h">HUD Editor</h2>
+      <div class="prose">
+        <p>Open <strong>Customization → HUD</strong> to place Polaris overlays — FPS counter, latency, session timer and clock — by dragging them in the preview. Each overlay has its own size, opacity, colour and background.</p>
+        <p>The editor can also restyle supported parts of the game interface such as the kill feed, scoreboard and weapon info. That only changes how they look on your screen; the game itself is not modified.</p>
+        <p>Two official presets are included: <strong>Polaris Default</strong> and <strong>Minimal</strong> (FPS only).</p>
+      </div>
+    </section>
+
+    <section class="guide" id="skins" aria-labelledby="skins-h">
+      <p class="guide__num pl-mono">06</p>
+      <h2 id="skins-h">Skin Studio</h2>
+      <div class="prose">
+        <p>Skin Studio is a layered pixel editor for 64×64 and 128×128 templates. Use layers for base colours, shading and details so you can change one without repainting the others. Undo history covers every stroke.</p>
+        <ol>
+          <li>Create a new skin from a template.</li>
+          <li>Paint, then export it as PNG.</li>
+          <li>Share it from the client marketplace or the <a href="skins.html">skin gallery</a>.</li>
+        </ol>
+        <p>Skins are cosmetic and local: they change what you see, not what other players see.</p>
+      </div>
+    </section>
+
+    <section class="guide" id="performance" aria-labelledby="perf-h">
+      <p class="guide__num pl-mono">07</p>
+      <h2 id="perf-h">Performance</h2>
+      <div class="prose">
+        <p>The <strong>Performance</strong> view shows measured FPS, frame time, memory and CPU. Pick a profile that suits your machine:</p>
+        <ul>
+          <li><strong>Performance</strong> — no interface animations or animated backgrounds, unlocked frame rate. Best for older laptops.</li>
+          <li><strong>Balanced</strong> — light animations, unlocked frame rate. The default.</li>
+          <li><strong>Quality</strong> — all interface effects with a VSync-locked frame rate for smooth pacing.</li>
+        </ul>
+        <p>If the frame rate drops when the window is in the background, that is background throttling working as intended.</p>
+      </div>
+    </section>
+
+    <section class="guide" id="profiles" aria-labelledby="profiles-h">
+      <p class="guide__num pl-mono">08</p>
+      <h2 id="profiles-h">Smart Profiles</h2>
+      <div class="prose">
+        <p>A profile bundles a performance profile, a HUD preset and a crosshair. The official ones are <strong>Competitive</strong>, <strong>Casual</strong>, <strong>Minimal</strong>, <strong>Performance</strong> and <strong>Practice</strong>. Switch between them in <strong>Profiles</strong>, or save your current setup as a new one.</p>
+      </div>
+    </section>
+
+    <section class="guide" id="updates" aria-labelledby="updates-h">
+      <p class="guide__num pl-mono">09</p>
+      <h2 id="updates-h">Updates &amp; channels</h2>
+      <div class="prose">
+        <p>The <strong>Update Center</strong> checks for new versions regularly and downloads verified updates in the background. Choose the channel in its settings:</p>
+        <ul>
+          <li><strong>Stable</strong> — what we recommend for everyone.</li>
+          <li><strong>Beta</strong> — new features earlier, with more rough edges. Beta builds may be rolled out gradually.</li>
+        </ul>
+        <p>Every release and its notes are in the <a href="changelog.html">changelog</a>.</p>
+      </div>
+    </section>
+
+    <section class="guide" id="sync" aria-labelledby="sync-h">
+      <p class="guide__num pl-mono">10</p>
+      <h2 id="sync-h">Account &amp; cloud sync</h2>
+      <div class="prose">
+        <p>Create a Polaris account in the client or on the <a href="community.html#account">community page</a>. With <strong>Cloud Sync</strong> on, your profiles and settings follow you to other machines. Conflicts are never overwritten silently — the client asks which copy to keep.</p>
+        <p>Protect your account with two-factor authentication in <strong>Settings → Account</strong>. From there you can also see active sessions, export your data or delete the account.</p>
+      </div>
+    </section>
+
+    <aside class="guides__help">
+      <p class="pl-label">Still stuck?</p>
+      <p>See <a href="support.html">Support</a> for troubleshooting, or <a href="bugs.html">file a bug report</a>.</p>
+    </aside>
+  </div>
+</div>

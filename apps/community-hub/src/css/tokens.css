@@ -1,0 +1,48 @@
+/*
+ * Community Hub tokens. The colour values mirror the website.theme defaults
+ * (shared/configuration/defaults.js) so the first paint is correct; at runtime
+ * js/core/theme.js overwrites them from the published bundle via style.setProperty.
+ * Spacing, type sizes, chamfer etc. come from shared/design/base.css.
+ */
+:root {
+  --c-bg: #07090F;
+  --c-surface: #0D1220;
+  --c-surface2: #141B2D;
+  --c-line: #1E283D;
+  --c-text: #EDF1F7;
+  --c-text2: #A3AFC2;
+  --c-text3: #68758B;
+  --c-accent: #00D9FF;
+  --c-accent2: #287BFF;
+  --c-accent3: #914DFF;
+  --c-paper: #F2EFE8;
+  --c-ink: #0B0F18;
+
+  /* status — not owner-themeable, chosen for AA on --c-bg */
+  --c-ok: #3DDC97;
+  --c-warn: #FFB547;
+  --c-danger: #FF6B79;
+
+  /* derived */
+  --c-line-strong: color-mix(in srgb, var(--c-text) 26%, var(--c-bg));
+  --c-accent-ink: #04111A;
+  --c-accent-soft: color-mix(in srgb, var(--c-accent) 14%, transparent);
+  --c-label: var(--c-text2);
+
+  /* layout */
+  --wrap: 1360px;
+  --gutter: clamp(16px, 4vw, 56px);
+  --col-gap: clamp(16px, 2.2vw, 32px);
+  --header-h: 64px;
+
+  /* editorial type sizes (base.css carries the UI scale) */
+  --fs-display: clamp(46px, 8.2vw, 128px);
+  --fs-title: clamp(40px, 6.4vw, 92px);
+  --fs-h2: clamp(26px, 3.1vw, 42px);
+  --fs-h3: clamp(19px, 1.7vw, 24px);
+  --fs-lede: clamp(17px, 1.45vw, 21px);
+  --fs-body: 16px;
+  --track-display: -0.035em;
+
+  --section-y: clamp(56px, 8vw, 120px);
+}

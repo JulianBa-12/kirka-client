@@ -1,0 +1,9 @@
+{
+  "keys": [
+    {
+      "keyId": "6906d93966a1b517",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/JF//2Xm2yTUrmnhKzBQZVGWXWwtLTXfqUURnvtotTA=\n-----END PUBLIC KEY-----\n",
+      "algorithm": "ed25519"
+    }
+  ]
+}

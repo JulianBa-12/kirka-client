@@ -1,0 +1,28 @@
+<!--@page {"title": "Plugins", "description": "Reviewed, sandboxed plugins for the Polaris Client, with their permissions and compatibility.", "css": ["catalog.css"], "js": "plugins.js"} -->
+<header class="page-head">
+  <div class="wrap">
+    <p class="page-head__label pl-label">Plugins · beta</p>
+    <div class="grid">
+      <div class="page-head__main">
+        <h1 class="page-head__title">Plugins</h1>
+        <p class="page-head__lede">Small extensions for the client interface. Each plugin runs sandboxed and only gets the permissions a reviewer approved — listed next to every entry.</p>
+      </div>
+      <div class="page-head__side">
+        <ol class="plugin-steps">
+          <li><span class="pl-mono">01</span> An author uploads a plugin with its manifest.</li>
+          <li><span class="pl-mono">02</span> A moderator reviews the code and approves permissions.</li>
+          <li><span class="pl-mono">03</span> The client asks you before enabling it, showing those permissions.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</header>
+<section class="catalog-main" aria-label="Plugins">
+  <div class="wrap" data-bind="catalog"><div class="loading" role="status">Loading plugins</div></div>
+</section>
+<section class="section section--tight catalog-rules" aria-labelledby="rules-h">
+  <div class="wrap grid">
+    <h2 class="pl-label catalog-rules__h" id="rules-h">Marketplace rules</h2>
+    <p class="catalog-rules__text" data-bind="rules"></p>
+  </div>
+</section>

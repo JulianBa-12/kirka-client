@@ -1,0 +1,8 @@
+.nf { padding-block: clamp(48px, 9vw, 140px) var(--section-y); row-gap: var(--sp-12); }
+.nf__code { font-size: clamp(72px, 16vw, 220px); line-height: 0.85; color: var(--c-accent); letter-spacing: -0.04em; }
+.nf__title { margin-top: var(--sp-6); font-size: var(--fs-h2); font-weight: 900; letter-spacing: -0.02em; }
+.nf__lede { margin-top: var(--sp-3); color: var(--c-text2); font-size: var(--fs-lede); max-width: 46ch; }
+.nf__links ul { list-style: none; border-top: var(--bw) solid var(--c-line-strong); margin-top: var(--sp-3); }
+.nf__links a { display: block; padding: var(--sp-4) 0; border-bottom: var(--bw) solid var(--c-line); text-decoration: none; font-weight: 700; }
+.nf__links a::after { content: " →"; color: var(--c-accent); }
+@media (min-width: 1000px) { .nf__main { grid-column: 1 / span 7; } .nf__links { grid-column: 9 / -1; align-self: end; } }

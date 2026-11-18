@@ -1,0 +1,26 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Backend
+        working-directory: backend
+        run: npm ci && npm test
+      - name: Client
+        working-directory: apps/client
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        run: npm ci --ignore-scripts && npm test && npm run check
+      - name: Website
+        working-directory: apps/community-hub
+        run: npm test

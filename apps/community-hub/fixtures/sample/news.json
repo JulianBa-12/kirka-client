@@ -1,0 +1,118 @@
+{
+  "total": 5,
+  "items": [
+    {
+      "id": 5,
+      "slug": "polaris-1-0",
+      "title": "Polaris 1.0 is stable",
+      "excerpt": "After two months of public beta the first stable build is out for Linux, with signed updates and the full studio suite.",
+      "body": "Polaris 1.0.0 is the first build we are comfortable calling stable.\n\n## What changed since the beta\n\n- Update manifests are signed. The client verifies every manifest before it downloads anything.\n- Crosshair Studio and HUD Editor are out of beta.\n- The Skin Studio gained layers and a proper undo history.\n\n## Upgrading\n\nIf you run 0.9.x, the update center will offer 1.0.0 automatically. Fresh installs: grab the AppImage from the [downloads page](downloads.html).\n\n> Polaris is an unofficial project. It loads the official Kirka.io website and never touches gameplay.",
+      "coverUrl": null,
+      "tags": [
+        "release"
+      ],
+      "pinned": true,
+      "publishedAt": "2026-11-14T16:00:00.000Z",
+      "author": {
+        "id": 1,
+        "username": "polaris",
+        "displayName": "Polaris Team",
+        "avatarUrl": null,
+        "role": "owner",
+        "bio": "",
+        "createdAt": "2026-08-01T10:00:00.000Z"
+      }
+    },
+    {
+      "id": 4,
+      "slug": "skin-studio-templates",
+      "title": "New Skin Studio templates",
+      "excerpt": "The 128×128 template now ships with labelled regions, so you can see which pixels end up on which part of the model.",
+      "body": "The 128×128 template now ships with labelled regions.\n\nOpen **Skin Studio → New → 128×128** and toggle *Show regions* in the layer panel.",
+      "coverUrl": null,
+      "tags": [
+        "skins",
+        "studio"
+      ],
+      "pinned": false,
+      "publishedAt": "2026-11-06T10:00:00.000Z",
+      "author": {
+        "id": 1,
+        "username": "polaris",
+        "displayName": "Polaris Team",
+        "avatarUrl": null,
+        "role": "owner",
+        "bio": "",
+        "createdAt": "2026-08-01T10:00:00.000Z"
+      }
+    },
+    {
+      "id": 3,
+      "slug": "release-candidate-2",
+      "title": "Release candidate 2",
+      "excerpt": "Ultrawide fixes for the HUD editor, visible download progress in the update center and lower idle CPU usage.",
+      "body": "Release candidate 2 is rolling out to everyone on the beta channel.\n\n- HUD editor fixes on ultrawide displays\n- Download progress in the update center\n- Lower idle CPU usage",
+      "coverUrl": null,
+      "tags": [
+        "release",
+        "beta"
+      ],
+      "pinned": false,
+      "publishedAt": "2026-10-30T18:00:00.000Z",
+      "author": {
+        "id": 1,
+        "username": "polaris",
+        "displayName": "Polaris Team",
+        "avatarUrl": null,
+        "role": "owner",
+        "bio": "",
+        "createdAt": "2026-08-01T10:00:00.000Z"
+      }
+    },
+    {
+      "id": 2,
+      "slug": "community-guidelines",
+      "title": "Marketplace ground rules",
+      "excerpt": "Everything in the marketplace is free. No KC, no coins, no trading — and only upload work you made yourself.",
+      "body": "Everything shared through Polaris is free.\n\n1. Upload only your own work, or work you have permission to share.\n2. No trading of Kirka.io items, KC or coins.\n3. Plugins are reviewed before they appear.",
+      "coverUrl": null,
+      "tags": [
+        "community"
+      ],
+      "pinned": false,
+      "publishedAt": "2026-10-12T09:00:00.000Z",
+      "author": {
+        "id": 1,
+        "username": "polaris",
+        "displayName": "Polaris Team",
+        "avatarUrl": null,
+        "role": "owner",
+        "bio": "",
+        "createdAt": "2026-08-01T10:00:00.000Z"
+      }
+    },
+    {
+      "id": 1,
+      "slug": "public-beta",
+      "title": "The public beta is open",
+      "excerpt": "Polaris 0.9.0 is available for Linux. Expect rough edges, and please file bug reports.",
+      "body": "Polaris 0.9.0 is available for Linux as an AppImage.\n\nPlease report anything that breaks through the [bug tracker](bugs.html).",
+      "coverUrl": null,
+      "tags": [
+        "release",
+        "beta"
+      ],
+      "pinned": false,
+      "publishedAt": "2026-10-02T15:00:00.000Z",
+      "author": {
+        "id": 1,
+        "username": "polaris",
+        "displayName": "Polaris Team",
+        "avatarUrl": null,
+        "role": "owner",
+        "bio": "",
+        "createdAt": "2026-08-01T10:00:00.000Z"
+      }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "name": "polaris-client",
+  "productName": "Polaris Client",
+  "version": "1.0.0",
+  "description": "Polaris Client — an independent desktop client for Kirka.io",
+  "main": "src/main/main.js",
+  "author": "Polaris <noreply@polaris.invalid>",
+  "license": "MIT",
+  "homepage": "https://julianba-12.github.io/kirka-client/",
+  "repository": "https://github.com/JulianBa-12/kirka-client",
+  "private": true,
+  "scripts": {
+    "sync-shared": "node scripts/sync-shared.js",
+    "prestart": "node scripts/sync-shared.js",
+    "start": "electron .",
+    "check": "node scripts/check.js",
+    "test": "node scripts/sync-shared.js && node --test test/*.test.js",
+    "prebuild:linux": "node scripts/sync-shared.js",
+    "build:linux": "electron-builder --linux AppImage deb"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "io.polaris.kirka",
+    "productName": "Polaris Client",
+    "artifactName": "Polaris-Client-${version}.${ext}",
+    "directories": { "output": "../../dist", "buildResources": "build" },
+    "files": ["src/**/*", "package.json", "!src/**/*.map"],
+    "asar": true,
+    "publish": null,
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Game",
+      "icon": "build/icon.png",
+      "executableName": "polaris-client",
+      "synopsis": "Independent desktop client for Kirka.io",
+      "description": "Polaris runs the official Kirka.io game in a dedicated window and adds a crosshair studio, HUD editor, skin studio, performance tools and a community hub.",
+      "maintainer": "Polaris <noreply@polaris.invalid>",
+      "desktop": { "StartupWMClass": "polaris-client" }
+    },
+    "deb": { "packageName": "polaris-client" }
+  }
+}

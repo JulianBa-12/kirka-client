@@ -1,0 +1,22 @@
+<!--@page {"title": "Discord", "description": "Join the Polaris Discord for release previews, support and skin drops.", "css": ["discord.css"], "js": "discord.js"} -->
+<div class="wrap grid discord">
+  <header class="discord__head">
+    <p class="pl-label">Community · chat</p>
+    <h1 class="discord__title" data-bind="title">Discord</h1>
+    <div class="prose discord__body" data-bind="body"></div>
+  </header>
+  <section class="discord__invite" aria-labelledby="inv-h">
+    <h2 class="pl-label" id="inv-h">Invite</h2>
+    <div data-bind="invite"><div class="loading" role="status">Loading</div></div>
+  </section>
+  <section class="discord__channels" aria-labelledby="ch-h">
+    <p class="sec-label pl-label"><span class="sec-label__num">01</span> What it’s for</p>
+    <h2 class="pl-sr" id="ch-h">What the Discord is for</h2>
+    <dl class="ch-list">
+      <dt class="pl-mono"># releases</dt><dd>Previews of upcoming builds and beta testing before a version reaches the stable channel.</dd>
+      <dt class="pl-mono"># support</dt><dd>Quick questions and help from other players. Reproducible bugs still go to the <a href="bugs.html">bug tracker</a>.</dd>
+      <dt class="pl-mono"># skins</dt><dd>Work-in-progress skins and crosshairs before they’re uploaded to the <a href="skins.html">gallery</a>.</dd>
+    </dl>
+    <p class="meta discord__note">Server channel names may differ. Same rules as everywhere on Polaris: no cheats, no automation, no anti-cheat discussion.</p>
+  </section>
+</div>

@@ -1,0 +1,4 @@
+node_modules/
+src/shared/
+build/icon.png
+src/preload/game.js

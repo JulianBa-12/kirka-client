@@ -1,0 +1,28 @@
+<!--@page {"title": "Skin Gallery", "description": "Community-made Kirka.io skins for the Polaris Client Skin Studio. Free to download.", "css": ["catalog.css"], "js": "skins.js"} -->
+<header class="page-head">
+  <div class="wrap">
+    <p class="page-head__label pl-label">Skin gallery · community</p>
+    <div class="grid">
+      <div class="page-head__main">
+        <h1 class="page-head__title">Skin gallery</h1>
+        <p class="page-head__lede">Pixel skins drawn by players in the Polaris Skin Studio. Download one, open it in the studio, make it yours.</p>
+      </div>
+      <div class="page-head__side">
+        <ul class="catalog-head__facts" data-bind="facts">
+          <li>Format <strong>PNG · 64×64 / 128×128</strong></li>
+          <li>Made with <strong>Skin Studio</strong></li>
+          <li>Price <strong>Always free</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>
+<section class="catalog-main" aria-label="Skins">
+  <div class="wrap" data-bind="catalog"><div class="loading" role="status">Loading gallery</div></div>
+</section>
+<section class="section section--tight catalog-rules" aria-labelledby="rules-h">
+  <div class="wrap grid">
+    <h2 class="pl-label catalog-rules__h" id="rules-h">Marketplace rules</h2>
+    <p class="catalog-rules__text" data-bind="rules"></p>
+  </div>
+</section>

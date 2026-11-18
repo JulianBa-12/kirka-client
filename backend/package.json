@@ -1,0 +1,20 @@
+{
+  "name": "polaris-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Polaris ecosystem backend: auth, owner API, community API, signed remote configuration.",
+  "main": "server.js",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js",
+    "keys:export-trust": "node --disable-warning=ExperimentalWarning scripts/export-trust.js",
+    "owner:setup-token": "node --disable-warning=ExperimentalWarning scripts/owner-setup-token.js",
+    "export:static": "node --disable-warning=ExperimentalWarning scripts/export-static.js"
+  },
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "express": "^5.1.0"
+  }
+}

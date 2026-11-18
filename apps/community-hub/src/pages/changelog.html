@@ -1,0 +1,18 @@
+<!--@page {"title": "Changelog", "description": "Every published Polaris Client release, newest first, with release notes.", "css": ["changelog.css"], "js": "changelog.js"} -->
+<div class="band--paper changelog">
+  <header class="page-head">
+    <div class="wrap">
+      <p class="page-head__label pl-label">Changelog · all channels</p>
+      <div class="grid">
+        <div class="page-head__main">
+          <h1 class="page-head__title">Changelog</h1>
+          <p class="page-head__lede">Every published release of Polaris Client, newest first. Stable builds are what most players run; beta builds get features earlier.</p>
+        </div>
+        <div class="page-head__side changelog__summary" data-bind="summary"></div>
+      </div>
+    </div>
+  </header>
+  <section class="changelog__body" aria-label="Releases">
+    <div class="wrap" data-bind="timeline"><div class="loading" role="status">Loading releases</div></div>
+  </section>
+</div>

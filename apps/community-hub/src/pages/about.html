@@ -1,0 +1,38 @@
+<!--@page {"title": "About", "description": "About Polaris: an independent, community-run desktop client for Kirka.io. Not affiliated with Kirka.io.", "css": ["about.css"], "js": "about.js"} -->
+<header class="page-head">
+  <div class="wrap">
+    <p class="page-head__label pl-label">About · the project</p>
+    <div class="grid">
+      <div class="page-head__main">
+        <h1 class="page-head__title" data-bind="title">About Polaris</h1>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="wrap grid about">
+  <div class="about__body prose" data-bind="body"></div>
+  <aside class="about__facts" aria-labelledby="facts-h">
+    <h2 class="pl-label" id="facts-h">Project facts</h2>
+    <dl class="spec">
+      <dt class="pl-label">Product</dt><dd>Polaris Client</dd>
+      <dt class="pl-label">Platform</dt><dd>Linux · AppImage, DEB</dd>
+      <dt class="pl-label">Status</dt><dd>Independent, community-run</dd>
+      <dt class="pl-label">Latest</dt><dd data-bind="latest">—</dd>
+      <dt class="pl-label">Source</dt><dd data-bind="github">—</dd>
+    </dl>
+  </aside>
+  <section class="about__principles" aria-labelledby="pr-h">
+    <p class="sec-label pl-label"><span class="sec-label__num">01</span> Principles</p>
+    <h2 class="sec-title" id="pr-h">What Polaris will and won’t do</h2>
+    <ol class="principles">
+      <li><h3>It loads the real game.</h3><p>Polaris opens the official Kirka.io website. It doesn’t host, copy or modify the game.</p></li>
+      <li><h3>Cosmetic only.</h3><p>Crosshairs, HUD layout, skins and themes change how things look on your screen — never hitboxes, movement or anything the server controls.</p></li>
+      <li><h3>No cheats, no automation.</h3><p>No aim assistance, no macros, no anti-cheat bypasses. Plugins that try are removed.</p></li>
+      <li><h3>Signed updates.</h3><p>Every release and configuration bundle is signed; the client refuses anything that doesn’t verify.</p></li>
+    </ol>
+  </section>
+  <section class="about__disclaimer" aria-labelledby="disc-h">
+    <h2 class="pl-label" id="disc-h">Disclaimer</h2>
+    <p>Polaris Client and the Polaris Community Hub are unofficial. They are not affiliated with, endorsed by or connected to Kirka.io or its developers. “Kirka” and related names belong to their respective owners.</p>
+  </section>
+</div>

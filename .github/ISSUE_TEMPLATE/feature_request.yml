@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest an improvement for Polaris.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+    validations:
+      required: true
+  - type: checkboxes
+    id: fair
+    attributes:
+      label: Fair play
+      options:
+        - label: This does not give a competitive advantage (no aim assistance, wallhacks, automation or anti-cheat bypasses).
+          required: true

@@ -1,0 +1,29 @@
+<!--@page {"title": "Suggestions", "description": "Propose features for Polaris Client and vote on ideas from other players.", "css": ["feedback.css"], "js": "suggestions.js"} -->
+<header class="page-head">
+  <div class="wrap">
+    <p class="page-head__label pl-label">Community · ideas board</p>
+    <div class="grid">
+      <div class="page-head__main">
+        <h1 class="page-head__title">Suggestions</h1>
+        <p class="page-head__lede">What should Polaris do next? Vote for the ideas you want; the team marks what’s planned and replies on the board.</p>
+      </div>
+      <ol class="page-head__side fb-howto">
+        <li><span class="pl-mono">01</span><span>One vote per account per idea. You can take it back.</span></li>
+        <li><span class="pl-mono">02</span><span>Ranked by votes. Status shows what the team decided.</span></li>
+        <li><span class="pl-mono">03</span><span>Bugs belong in the <a href="bugs.html">bug tracker</a>.</span></li>
+      </ol>
+    </div>
+  </div>
+</header>
+<div class="wrap grid fb fb--ideas">
+  <section class="fb__list" aria-labelledby="sug-list-h">
+    <p class="sec-label pl-label"><span class="sec-label__num">01</span> The board</p>
+    <h2 class="pl-sr" id="sug-list-h">All suggestions</h2>
+    <div data-bind="list"><div class="loading" role="status">Loading</div></div>
+  </section>
+  <section class="fb__form" aria-labelledby="sug-form-h">
+    <p class="sec-label pl-label"><span class="sec-label__num">02</span> Propose</p>
+    <h2 class="sec-title" id="sug-form-h">Add an idea</h2>
+    <div data-bind="form"><div class="loading" role="status">Loading</div></div>
+  </section>
+</div>

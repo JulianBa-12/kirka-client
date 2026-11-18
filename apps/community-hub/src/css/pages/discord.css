@@ -1,0 +1,21 @@
+/* Discord: oversized word, invite block on the right, channel definitions below. */
+.discord { padding-block: clamp(40px, 6vw, 96px) var(--section-y); row-gap: var(--sp-12); }
+.discord__head { display: grid; gap: var(--sp-5); }
+.discord__head > .pl-label { color: var(--c-label); }
+.discord__title { font: 900 var(--fs-display)/0.9 var(--font-display); letter-spacing: var(--track-display); }
+.discord__body { font-size: var(--fs-lede); color: var(--c-text2); max-width: 46ch; }
+.discord__invite { border-top: 2px solid var(--c-accent); padding-top: var(--sp-5); display: grid; gap: var(--sp-4); align-content: start; }
+.discord__invite > div { display: grid; gap: var(--sp-3); justify-items: start; }
+.discord__pending { font: 700 var(--fs-h3)/1.25 var(--font-display); }
+.discord__url { overflow-wrap: anywhere; }
+.ch-list { display: grid; grid-template-columns: minmax(8em, max-content) 1fr; border-top: var(--bw) solid var(--c-line-strong); }
+.ch-list dt, .ch-list dd { padding: var(--sp-4) 0; border-bottom: var(--bw) solid var(--c-line); }
+.ch-list dt { color: var(--c-accent); padding-right: var(--sp-6); }
+.ch-list dd { color: var(--c-text2); }
+.discord__note { margin-top: var(--sp-4); }
+@media (max-width: 520px) { .ch-list { grid-template-columns: 1fr; } .ch-list dt { border-bottom: 0; padding-bottom: 0; } }
+@media (min-width: 1000px) {
+  .discord__head { grid-column: 1 / span 7; }
+  .discord__invite { grid-column: 9 / -1; align-self: end; }
+  .discord__channels { grid-column: 1 / span 8; }
+}

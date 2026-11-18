@@ -1,0 +1,30 @@
+<!--@page {"title": "Resource Library", "description": "Community backgrounds, weapon textures, sounds, crosshairs, HUD layouts and themes for the Polaris Client.", "css": ["catalog.css"], "js": "resources.js"} -->
+<header class="page-head">
+  <div class="wrap">
+    <p class="page-head__label pl-label">Resource library · community</p>
+    <div class="grid">
+      <div class="page-head__main">
+        <h1 class="page-head__title">Resource library</h1>
+        <p class="page-head__lede">Backgrounds, texture and sound swaps, crosshairs, HUD layouts and client themes. Resource swaps are cosmetic and only change what you see on your own screen.</p>
+      </div>
+      <div class="page-head__side">
+        <dl class="spec res-kinds">
+          <dt class="pl-label">Backgrounds</dt><dd>menu art</dd>
+          <dt class="pl-label">Resources</dt><dd>textures · sounds</dd>
+          <dt class="pl-label">Crosshairs</dt><dd>studio JSON</dd>
+          <dt class="pl-label">HUD layouts</dt><dd>editor JSON</dd>
+          <dt class="pl-label">Themes</dt><dd>client colours</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</header>
+<section class="catalog-main" aria-label="Resources">
+  <div class="wrap" data-bind="catalog"><div class="loading" role="status">Loading library</div></div>
+</section>
+<section class="section section--tight catalog-rules" aria-labelledby="rules-h">
+  <div class="wrap grid">
+    <h2 class="pl-label catalog-rules__h" id="rules-h">Marketplace rules</h2>
+    <p class="catalog-rules__text" data-bind="rules"></p>
+  </div>
+</section>
