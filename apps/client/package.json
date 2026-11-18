@@ -1,7 +1,7 @@
 {
   "name": "polaris-client",
   "productName": "Polaris Client",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Polaris Client — an independent desktop client for Kirka.io",
   "main": "src/main/main.js",
   "author": "Polaris <noreply@polaris.invalid>",
@@ -16,7 +16,11 @@
     "check": "node scripts/check.js",
     "test": "node scripts/sync-shared.js && node --test test/*.test.js",
     "prebuild:linux": "node scripts/sync-shared.js",
-    "build:linux": "electron-builder --linux AppImage deb"
+    "build:linux": "electron-builder --linux AppImage deb",
+    "prebuild:win": "node scripts/sync-shared.js",
+    "build:win": "electron-builder --win nsis --x64 --publish never",
+    "prebuild:mac": "node scripts/sync-shared.js",
+    "build:mac": "electron-builder --mac dmg --arm64 --x64 --publish never"
   },
   "devDependencies": {
     "electron": "^33.2.1",
@@ -54,6 +58,48 @@
     },
     "deb": {
       "packageName": "polaris-client"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "Polaris-Client-${version}-Setup.${ext}",
+      "publisherName": "Polaris"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "artifactName": "Polaris-Client-${version}-Setup.${ext}",
+      "shortcutName": "Polaris Client",
+      "uninstallDisplayName": "Polaris Client",
+      "deleteAppDataOnUninstall": false
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.games",
+      "icon": "build/icon.png",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "artifactName": "Polaris-Client-${version}-mac-${arch}.${ext}"
+    },
+    "dmg": {
+      "artifactName": "Polaris-Client-${version}-mac-${arch}.${ext}",
+      "title": "Polaris Client ${version}"
     }
   },
   "dependencies": {

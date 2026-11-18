@@ -44,7 +44,7 @@ if (stable) {
     h('dl', { class: 'spec release-card__spec' },
       h('dt', { class: 'pl-label' }, 'Channel'), h('dd', null, 'stable'),
       h('dt', { class: 'pl-label' }, 'Published'), h('dd', null, h('time', { datetime: stable.publishedAt }, fmt.date(stable.publishedAt))),
-      app ? [h('dt', { class: 'pl-label' }, 'AppImage'), h('dd', null, fmt.bytes(app.size))] : null,
+      h('dt', { class: 'pl-label' }, 'Systems'), h('dd', null, [files.some((f) => f.platform.startsWith('win')) && 'Windows', files.some((f) => f.platform.startsWith('mac')) && 'macOS', app && 'Linux'].filter(Boolean).join(' · ') || '—'),
       manifest.channels.beta ? [h('dt', { class: 'pl-label' }, 'Beta'), h('dd', null, manifest.channels.beta.version)] : null),
     h('a', { class: 'arrow-link', href: 'downloads.html' }, 'Files and checksums'));
 } else {
@@ -135,12 +135,14 @@ const RENDER = {
 
   download(sec) {
     const files = stable ? publicFiles(stable, site.downloads) : [];
-    const app = files.find((f) => f.platform === 'linux-appimage');
+    const sys = (() => { const p = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '').toLowerCase(); return p.includes('win') ? ['win', 'Windows'] : p.includes('mac') ? ['mac', 'macOS'] : ['linux', 'Linux']; })();
+    const app = files.find((f) => f.platform.startsWith(sys[0])) || files[0];
+    const sysName = app && app.platform.startsWith(sys[0]) ? sys[1] : app ? fmt.platformLabel(app.platform).split(' · ')[0] : '';
     return h('section', { class: 'section home-download', 'aria-labelledby': `sec-${sec.id}` },
       h('div', { class: 'wrap grid' },
         h('div', { class: 'home-download__copy' }, label('Download'), h('h2', { class: 'sec-title', id: `sec-${sec.id}` }, sec.title || 'Download'), sec.body ? h('p', { class: 'sec-intro' }, sec.body) : null),
         h('div', { class: 'home-download__action' }, app
-          ? [h('a', { class: 'btn btn--primary btn--lg pl-chamfer', href: 'downloads.html' }, `Polaris ${stable.version} for Linux`), h('p', { class: 'meta' }, `${fmt.bytes(app.size)} · AppImage`)]
+          ? [h('a', { class: 'btn btn--primary btn--lg pl-chamfer', href: 'downloads.html' }, `Polaris ${stable.version} for ${sysName}`), h('p', { class: 'meta' }, `${fmt.bytes(app.size)} · ${fmt.platformLabel(app.platform).split(' · ')[1]} · also for Windows, macOS and Linux`)]
           : [h('p', { class: 'meta' }, 'First release pending.'), h('a', { class: 'arrow-link', href: GITHUB_RELEASES, rel: 'noopener noreferrer', target: '_blank' }, 'Watch GitHub releases')])));
   },
 

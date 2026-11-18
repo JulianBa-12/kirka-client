@@ -5,6 +5,7 @@
  *   node scripts/publish-release.js --version 1.0.0 --notes ../docs/RELEASE_NOTES.md \
  *     --base-url https://github.com/<owner>/<repo>/releases/download/v1.0.0 \
  *     ../dist/Polaris-Client-1.0.0.AppImage ../dist/Polaris-Client-1.0.0.deb [--news]
+ *   Recognised files: *.AppImage, *.deb, *-Setup.exe (Windows x64), *-mac-arm64.dmg, *-mac-x64.dmg
  *
  * Runs with direct database access on the server machine (the same trust level as the
  * operator who holds the signing key) — it is the scripted equivalent of the Owner app's
@@ -36,7 +37,9 @@ if (!files.length) { console.error('pass at least one artifact path'); process.e
 const notes = notesFile ? fs.readFileSync(notesFile, 'utf8') : '';
 const entries = files.map((f) => {
   const name = path.basename(f);
-  const platform = name.endsWith('.AppImage') ? 'linux-appimage' : name.endsWith('.deb') ? 'linux-deb' : null;
+  const platform = name.endsWith('.AppImage') ? 'linux-appimage' : name.endsWith('.deb') ? 'linux-deb'
+    : /-Setup\.exe$/.test(name) ? 'win-x64'
+    : /-mac-arm64\.dmg$/.test(name) ? 'mac-arm64' : /-mac-x64\.dmg$/.test(name) ? 'mac-x64' : null;
   if (!platform) throw new Error(`unsupported artifact ${name}`);
   const data = fs.readFileSync(f);
   return { platform, name, url: `${baseUrl}/${encodeURIComponent(name)}`, size: data.length, sha512: crypto.createHash('sha512').update(data).digest('base64') };
@@ -61,7 +64,9 @@ ctx.audit(null, 'release.published', rid, { version, channel, via: 'publish-rele
 if (withNews) {
   const slug = `polaris-client-${version.replace(/\./g, '-')}`;
   if (!db.get('SELECT id FROM news WHERE slug = ?', slug)) {
-    const excerpt = `Polaris Client ${version} is available for Linux as an AppImage and a .deb package.`;
+    const has = (p) => entries.some((e) => e.platform.startsWith(p));
+    const systems = [has('win') && 'Windows', has('mac') && 'macOS', has('linux') && 'Linux'].filter(Boolean);
+    const excerpt = `Polaris Client ${version} is available for ${systems.length > 1 ? `${systems.slice(0, -1).join(', ')} and ${systems.at(-1)}` : systems[0]}.`;
     db.run('INSERT INTO news (slug, title, excerpt, body, cover_url, tags, pinned, status, author_id, created_at, updated_at, published_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
       slug, title, excerpt, notes, null, JSON.stringify(['release']), 1, 'published', null, now(), now(), now());
     ctx.audit(null, 'news.created', slug, { title, via: 'publish-release.js' });

@@ -3,10 +3,14 @@
  * Update Center.
  * 1. Fetch the signed release manifest (server or Pages mirror) — remote.refresh('releases').
  * 2. Pick the newest release on the user's channel that applies to this install (rollout bucket).
- * 3. Download the AppImage to <userData>/updates, verifying size and SHA-512 from the signed manifest.
- * 4. Only after the user confirms: swap the running AppImage file (old one kept as .previous),
- *    then relaunch. Unverified files are deleted, never installed. Non-AppImage installs get
- *    the verified file and instructions instead of an in-place replacement.
+ * 3. Download the build for this platform (Linux AppImage, Windows installer, macOS disk image)
+ *    to <userData>/updates, verifying size and SHA-512 from the signed manifest.
+ * 4. Only after the user confirms:
+ *    - AppImage: swap the running file (old one kept as .previous), then relaunch.
+ *    - Windows: start the verified installer and quit, so it can replace the installed version.
+ *    - macOS: open the verified disk image; the user drags Polaris into Applications.
+ *    - anything else (.deb, development builds): show the verified file.
+ *    Unverified files are deleted, never installed.
  */
 const fs = require('fs');
 const path = require('path');
@@ -46,7 +50,7 @@ function status() {
     belowMinimum: manifest ? compareVersions(app.getVersion(), manifest.minimumVersion || '0.0.0') < 0 : false,
     history: manifest ? manifest.history.slice(0, 30).map((r) => ({ version: r.version, title: r.title, notes: r.notes, publishedAt: r.publishedAt, channel: r.channel })) : [],
     progress, downloaded: downloaded ? { version: downloaded.version, file: downloaded.file, verified: true } : null,
-    isAppImage: !!process.env.APPIMAGE,
+    isAppImage: !!process.env.APPIMAGE, installKind: installKind(), platform: platformKey(),
     error: remote.status.releases && !remote.status.releases.ok ? (remote.status.releases.errors || []).join(' · ') : null,
   };
 }
@@ -67,13 +71,14 @@ async function download() {
   const rel = candidate();
   if (!rel) throw new Error('No update is available');
   if (rel.held) throw new Error('This update is being rolled out gradually and is not yet available for this installation');
-  const f = (rel.files || []).find((x) => x.platform === 'linux-appimage');
-  if (!f) throw new Error('This release has no AppImage');
+  const f = (rel.files || []).find((x) => x.platform === platformKey());
+  if (!f) throw new Error(`This release has no build for ${platformKey()}`);
+  if (!/^[A-Za-z0-9._-]+$/.test(f.name || '')) throw new Error('Invalid file name in the release manifest');
   const u = new URL(f.url);
   const server = (state.settings.get().account.serverUrl || '').replace(/\/+$/, '');
   if (u.protocol !== 'https:' || !(ALLOWED_DOWNLOAD_HOSTS.test(u.hostname) || (server && f.url.startsWith(`${server}/files/`)))) throw new Error(`Refusing to download from ${u.hostname}`);
   fs.mkdirSync(P.updates, { recursive: true });
-  const dest = path.join(P.updates, `Polaris-Client-${rel.version}.AppImage`);
+  const dest = path.join(P.updates, f.name);
   const part = `${dest}.part`;
   const res = await fetch(f.url, { redirect: 'follow', signal: AbortSignal.timeout(30 * 60 * 1000) });
   if (!res.ok || !res.body) throw new Error(`Download failed (HTTP ${res.status})`);
@@ -109,8 +114,23 @@ async function download() {
 /** Called only after explicit confirmation in the UI. */
 function install() {
   if (!downloaded || !fs.existsSync(downloaded.file)) throw new Error('No verified update has been downloaded');
+  const kind = installKind();
+  if (kind === 'installer') {
+    log.info('starting verified installer', { version: downloaded.version, file: downloaded.file });
+    return shell.openPath(downloaded.file).then((err) => {
+      if (err) throw new Error(`The installer could not be started: ${err}`);
+      setTimeout(() => app.quit(), 800);
+      return { installed: false, message: 'The installer has started. Polaris closes now so it can be updated.' };
+    });
+  }
+  if (kind === 'dmg') {
+    return shell.openPath(downloaded.file).then((err) => {
+      if (err) throw new Error(`The disk image could not be opened: ${err}`);
+      return { installed: false, message: 'The verified disk image is open. Quit Polaris, drag Polaris Client into Applications and replace the old version.' };
+    });
+  }
   const target = process.env.APPIMAGE;
-  if (!target) { shell.showItemInFolder(downloaded.file); return { installed: false, message: 'Polaris is not running as an AppImage. The verified file was opened in your file manager — replace your installation manually.' }; }
+  if (!target) { shell.showItemInFolder(downloaded.file); return { installed: false, message: 'This installation can’t be replaced automatically. The verified file was opened in your file manager — install it manually.' }; }
   const dir = path.dirname(target);
   fs.accessSync(dir, fs.constants.W_OK);
   const staged = `${target}.new`;
@@ -133,6 +153,19 @@ function rollback() {
   app.relaunch({ execPath: target }); setTimeout(() => app.exit(0), 200);
   return { ok: true };
 }
+/** Which file in a release belongs to this installation. */
+function platformKey() {
+  if (process.platform === 'win32') return 'win-x64';
+  if (process.platform === 'darwin') return process.arch === 'arm64' ? 'mac-arm64' : 'mac-x64';
+  return 'linux-appimage';
+}
+function installKind() {
+  if (process.env.APPIMAGE) return 'appimage';
+  if (app.isPackaged && process.platform === 'win32') return 'installer';
+  if (app.isPackaged && process.platform === 'darwin') return 'dmg';
+  return 'manual';
+}
+
 const canRollback = () => !!(process.env.APPIMAGE && fs.existsSync(`${process.env.APPIMAGE}.previous`));
 
 module.exports = { check, download, install, rollback, canRollback, status, onStatus: (fn) => listeners.push(fn) };

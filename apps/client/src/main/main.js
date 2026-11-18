@@ -180,7 +180,8 @@ function matches(binding, input) {
   const parts = binding.split('+');
   const key = parts.pop();
   const want = { ctrl: parts.includes('Ctrl'), shift: parts.includes('Shift'), alt: parts.includes('Alt') };
-  return input.key.toLowerCase() === key.toLowerCase() && !!input.control === want.ctrl && !!input.shift === want.shift && !!input.alt === want.alt;
+  const ctrl = process.platform === 'darwin' ? (input.control || input.meta) : input.control; // Cmd counts as Ctrl on macOS
+  return input.key.toLowerCase() === key.toLowerCase() && !!ctrl === want.ctrl && !!input.shift === want.shift && !!input.alt === want.alt;
 }
 function hotkey(e, input, from) {
   if (input.type !== 'keyDown' || input.isAutoRepeat) return;
@@ -252,7 +253,7 @@ function applyPowerRule(onBattery) {
 async function heartbeat() {
   const s = state.settings.get();
   if (!s.privacy.telemetry || !server.base()) return;
-  try { await server.request('POST', '/telemetry/heartbeat', { installId: s.privacy.installId, version: app.getVersion(), channel: s.updates.channel, platform: 'linux' }); } catch {}
+  try { await server.request('POST', '/telemetry/heartbeat', { installId: s.privacy.installId, version: app.getVersion(), channel: s.updates.channel, platform: process.platform === 'win32' ? 'windows' : process.platform === 'darwin' ? 'macos' : 'linux' }); } catch {}
 }
 
 /* ---------- lifecycle ---------- */
@@ -267,7 +268,9 @@ process.on('uncaughtException', (e) => {
 });
 
 app.whenReady().then(async () => {
-  Menu.setApplicationMenu(null);
+  // macOS needs an application menu for Cmd+Q / copy / paste; elsewhere the window has its own title bar.
+  Menu.setApplicationMenu(process.platform === 'darwin' ? Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }, { role: 'windowMenu' }]) : null);
+  if (process.platform === 'win32') app.setAppUserModelId('io.polaris.kirka');
   log.info(`Polaris Client ${app.getVersion()} starting`, { electron: process.versions.electron, userData: P.root, flags: STARTUP_FLAGS, appImage: !!process.env.APPIMAGE });
   registerAppProtocols();
   registerProtocols(session.defaultSession);
@@ -306,4 +309,4 @@ app.whenReady().then(async () => {
 });
 
 app.on('before-quit', () => { tracker.save(); state.flushAll(); try { extras.realtime.stop(); } catch {} });
-app.on('window-all-closed', () => app.quit());
+app.on('window-all-closed', () => app.quit()); // also on macOS: closing the game window ends the session

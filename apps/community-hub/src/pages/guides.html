@@ -14,7 +14,7 @@
   <nav class="guides__toc" aria-labelledby="toc-h">
     <p class="pl-label" id="toc-h">On this page</p>
     <ol>
-      <li><a href="#install"><span class="pl-mono">01</span>Install on Linux</a></li>
+      <li><a href="#install"><span class="pl-mono">01</span>Install</a></li>
       <li><a href="#verify"><span class="pl-mono">02</span>Verify a download</a></li>
       <li><a href="#first-launch"><span class="pl-mono">03</span>First launch</a></li>
       <li><a href="#crosshair"><span class="pl-mono">04</span>Crosshair Studio</a></li>
@@ -31,17 +31,28 @@
 
     <section class="guide" id="install" aria-labelledby="install-h">
       <p class="guide__num pl-mono">01</p>
-      <h2 id="install-h">Install on Linux</h2>
+      <h2 id="install-h">Install</h2>
       <div class="prose">
-        <p>Polaris ships as an <strong>AppImage</strong> that runs on most distributions, and as a <strong>DEB</strong> package for Debian, Ubuntu and their derivatives. Get the current build from the <a href="downloads.html">downloads page</a>.</p>
-        <h3>AppImage</h3>
+        <p>Polaris is available for Windows, macOS and Linux. Get the current build from the <a href="downloads.html">downloads page</a>; it preselects your system.</p>
+        <h3>Windows</h3>
+        <ol>
+          <li>Run <code>Polaris-Client-*-Setup.exe</code>. It installs for your user account, without administrator rights, and adds a Start menu entry.</li>
+          <li>The installer isn’t code-signed yet. If SmartScreen shows “Windows protected your PC”, choose <strong>More info</strong> → <strong>Run anyway</strong>.</li>
+        </ol>
+        <h3>macOS</h3>
+        <ol>
+          <li>Pick the right disk image: <code>-mac-arm64.dmg</code> for Apple Silicon (M1 and newer), <code>-mac-x64.dmg</code> for Intel Macs.</li>
+          <li>Open it and drag <strong>Polaris Client</strong> into <strong>Applications</strong>.</li>
+          <li>Polaris isn’t notarized by Apple yet. On the first start, open <strong>System Settings → Privacy &amp; Security</strong> and choose <strong>Open Anyway</strong>, or run <code>xattr -dr com.apple.quarantine "/Applications/Polaris Client.app"</code>.</li>
+        </ol>
+        <h3>Linux: AppImage</h3>
         <ol>
           <li>Move the file somewhere permanent, for example <code>~/Applications</code>.</li>
           <li>Make it executable: <code>chmod +x Polaris-Client-*.AppImage</code></li>
           <li>Run it: <code>./Polaris-Client-*.AppImage</code></li>
         </ol>
         <p>If nothing happens and the terminal mentions FUSE, install <code>libfuse2</code> (on Ubuntu 22.04 and newer: <code>sudo apt install libfuse2</code>).</p>
-        <h3>DEB package</h3>
+        <h3>Linux: DEB package</h3>
         <p>Install with <code>sudo apt install ./polaris-client_*_amd64.deb</code>. Polaris then appears in your application menu.</p>
       </div>
     </section>
@@ -51,7 +62,12 @@
       <h2 id="verify-h">Verify a download</h2>
       <div class="prose">
         <p>The downloads page lists a SHA-512 checksum for every file. Before running a new download, compare it with what your system computes:</p>
-        <pre><code>sha512sum Polaris-Client-*.AppImage</code></pre>
+        <pre><code># Linux
+sha512sum Polaris-Client-*.AppImage
+# macOS
+shasum -a 512 Polaris-Client-*.dmg
+# Windows (PowerShell)
+Get-FileHash .\Polaris-Client-*-Setup.exe -Algorithm SHA512</code></pre>
         <p>The long hexadecimal string must match the one on the downloads page exactly. If it doesn’t, delete the file and download it again from the official page.</p>
         <p>You only need to do this for the first install. Afterwards the client verifies every update itself: update manifests are signed, and the client refuses any manifest whose signature does not match the key built into it.</p>
       </div>

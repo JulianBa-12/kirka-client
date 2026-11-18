@@ -135,7 +135,8 @@ const RESERVED = () => new Set(Object.values(store.settings.game.keybinds).conca
 export function comboOf(e) {
   if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return null;
   const key = e.key.length === 1 ? e.key.toUpperCase() : e.key;
-  return [e.ctrlKey && 'Ctrl', e.shiftKey && 'Shift', e.altKey && 'Alt', key].filter(Boolean).join('+');
+  const mac = /Mac/.test(navigator.platform);
+  return [(e.ctrlKey || (mac && e.metaKey)) && 'Ctrl', e.shiftKey && 'Shift', e.altKey && 'Alt', key].filter(Boolean).join('+');
 }
 
 export function assignShortcut(cmd) {

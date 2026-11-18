@@ -17,19 +17,25 @@ export async function render(root) {
     if (st.error) status.append(h('div.note.note-warn', `The release manifest could not be verified or loaded: ${st.error}. Polaris will not offer downloads from an unverified manifest.`));
     if (!a) status.append(h('div.upd-line', h('div', h('h2', st.error || !st.manifest ? 'Update status unknown' : 'You are up to date'), h('p.muted.small', st.lastCheck ? `Checked ${fmt.ago(st.lastCheck)}${st.manifest ? ` · manifest #${st.manifest.sequence}` : ''}` : 'Not checked yet this session.'))));
     else {
-      const f = (a.files || []).find((x) => x.platform === 'linux-appimage');
+      const f = (a.files || []).find((x) => x.platform === st.platform);
       const actions = h('div.inline');
       if (a.held) actions.append(h('span.badge.badge-warn', 'staged rollout — not yet available for this installation'));
       else if (st.progress) {
         const pct = st.progress.total ? Math.round((st.progress.received / st.progress.total) * 100) : null;
         actions.append(h('div.upd-progress', h('div.upd-bar', h('i', { style: `width:${pct || 5}%` })), h('span.mono.small', `${fmt.bytes(st.progress.received)}${st.progress.total ? ` / ${fmt.bytes(st.progress.total)}` : ''}`)));
       } else if (st.downloaded && st.downloaded.version === a.version) {
-        actions.append(h('span.badge.badge-ok', 'downloaded and verified'), button(st.isAppImage ? 'Install and restart' : 'Show file', async () => {
-          if (!await confirmDialog('Install update', st.isAppImage ? `Polaris ${a.version} replaces the current AppImage. The current version is kept as a backup so you can roll back. Restart now?` : 'Polaris is not running from an AppImage. The verified file will be shown in your file manager so you can install it yourself.', { confirm: st.isAppImage ? 'Install and restart' : 'Show file' })) return;
+        const K = {
+          appimage: ['Install and restart', `Polaris ${a.version} replaces the current AppImage. The current version is kept as a backup so you can roll back. Restart now?`],
+          installer: ['Run installer', `The verified installer for Polaris ${a.version} starts and Polaris closes. Your settings and library are kept. Continue?`],
+          dmg: ['Open disk image', `The verified disk image for Polaris ${a.version} opens. Quit Polaris, then drag Polaris Client into Applications to replace this version.`],
+          manual: ['Show file', 'This installation can’t be replaced automatically. The verified file will be shown in your file manager so you can install it yourself.'],
+        }[st.installKind || 'manual'];
+        actions.append(h('span.badge.badge-ok', 'downloaded and verified'), button(K[0], async () => {
+          if (!await confirmDialog('Install update', K[1], { confirm: K[0] })) return;
           try { const r = await api('updates:install'); if (r && r.message) toast(r.message, 'info', 8000); } catch (e) { fail(e, 'Install failed: '); }
         }, { kind: 'primary' }));
       } else if (f) actions.append(button(`Download ${fmt.bytes(f.size)}`, async () => { try { st = await api('updates:download'); draw(); toast('Update downloaded and verified', 'ok'); } catch (e) { fail(e, 'Download rejected: '); } }, { kind: 'primary', iconName: 'download' }));
-      else actions.append(h('span.muted.small', 'This release has no AppImage.'));
+      else actions.append(h('span.muted.small', `This release has no build for your system (${st.platform}).`));
       status.append(h('div.upd-line', h('div', h('div.pl-label.muted', `Available · ${a.channel}`), h('h2', `${a.version}${a.title ? ` — ${a.title}` : ''}`), h('p.muted.small', fmt.date(a.publishedAt))), actions), md(a.notes));
     }
     body.append(status);

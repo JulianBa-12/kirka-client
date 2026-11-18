@@ -1,0 +1,115 @@
+name: Desktop builds (Windows, macOS)
+
+# Builds the Windows installer and the macOS disk images on native runners, installs
+# each artifact the way a user would and runs the UI smoke test against it.
+# The builds are uploaded as workflow artifacts. Publishing them (GitHub release and
+# the signed release manifest) is a separate, manual step on the machine that holds the
+# signing key; this workflow never has access to that key.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install and test
+        working-directory: apps/client
+        run: npm ci && npm test && npm run check
+      - name: Build installer
+        working-directory: apps/client
+        run: npm run build:win
+      - name: Install silently (per user)
+        run: |
+          ls -la dist
+          ./dist/Polaris-Client-*-Setup.exe //S
+          sleep 20
+          EXE=$(find "$LOCALAPPDATA/Programs" -maxdepth 2 -name "Polaris Client.exe" | head -1)
+          echo "installed: $EXE"
+          test -n "$EXE"
+          echo "POLARIS_EXE=$EXE" >> "$GITHUB_ENV"
+      - name: Smoke test the installed app
+        run: |
+          export POLARIS_USER_DATA="$RUNNER_TEMP/pud"
+          mkdir -p "$POLARIS_USER_DATA/data"
+          echo '{"onboardingDone":true}' > "$POLARIS_USER_DATA/data/settings.json"
+          "$POLARIS_EXE" --remote-debugging-port=9333 > "$RUNNER_TEMP/app.log" 2>&1 &
+          sleep 25
+          node scripts/smoke-ui.js 9333 smoke-windows | tee smoke-windows.txt
+          grep -q " 0 errors" smoke-windows.txt
+          cat "$POLARIS_USER_DATA"/logs/* | head -40 | tee smoke-windows/client.log
+          grep -q "Polaris Client .* starting" smoke-windows/client.log
+          taskkill //F //IM "Polaris Client.exe" || true
+      - name: Uninstall
+        run: |
+          UN=$(find "$LOCALAPPDATA/Programs" -maxdepth 2 -name "Uninstall Polaris Client.exe" | head -1)
+          echo "uninstaller: $UN"
+          test -n "$UN" && "$UN" //S && sleep 10
+          test ! -f "$POLARIS_EXE" && echo "removed"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            dist/*-Setup.exe
+            smoke-windows/
+          if-no-files-found: error
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install and test
+        working-directory: apps/client
+        run: npm ci && npm test && npm run check
+      - name: Build disk images (arm64 and x64)
+        working-directory: apps/client
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run build:mac
+      - name: Check the signature of both builds
+        run: |
+          ls -la dist
+          for a in dist/mac-arm64 dist/mac; do
+            test -d "$a/Polaris Client.app" || continue
+            echo "== $a"; lipo -archs "$a/Polaris Client.app/Contents/MacOS/Polaris Client"
+            codesign --verify --deep --strict --verbose=2 "$a/Polaris Client.app"
+            codesign -dv "$a/Polaris Client.app" 2>&1 | grep -E "Signature|Identifier|Format"
+          done
+      - name: Install from the arm64 disk image and smoke test
+        run: |
+          DMG=$(ls dist/Polaris-Client-*-mac-arm64.dmg)
+          hdiutil attach "$DMG" -nobrowse -mountpoint /tmp/polaris-dmg
+          ditto "/tmp/polaris-dmg/Polaris Client.app" "$RUNNER_TEMP/Applications/Polaris Client.app"
+          hdiutil detach /tmp/polaris-dmg
+          export POLARIS_USER_DATA="$RUNNER_TEMP/pud"
+          mkdir -p "$POLARIS_USER_DATA/data"
+          echo '{"onboardingDone":true}' > "$POLARIS_USER_DATA/data/settings.json"
+          "$RUNNER_TEMP/Applications/Polaris Client.app/Contents/MacOS/Polaris Client" --remote-debugging-port=9333 > "$RUNNER_TEMP/app.log" 2>&1 &
+          sleep 25
+          node scripts/smoke-ui.js 9333 smoke-macos | tee smoke-macos.txt
+          grep -q " 0 errors" smoke-macos.txt
+          cat "$POLARIS_USER_DATA"/logs/* | head -40 | tee smoke-macos/client.log
+          grep -q "Polaris Client .* starting" smoke-macos/client.log
+          pkill -f "Polaris Client" || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            dist/*.dmg
+            smoke-macos/
+          if-no-files-found: error

@@ -54,5 +54,5 @@ export function initials(user) {
 
 export function pad(n, w = 2) { return String(n).padStart(w, '0'); }
 
-const PLATFORM = { 'linux-appimage': 'AppImage', 'linux-deb': 'Debian package' };
+const PLATFORM = { 'linux-appimage': 'Linux · AppImage', 'linux-deb': 'Linux · Debian package', 'win-x64': 'Windows · installer', 'mac-arm64': 'macOS · Apple Silicon', 'mac-x64': 'macOS · Intel' };
 export function platformLabel(p) { return PLATFORM[p] || p; }

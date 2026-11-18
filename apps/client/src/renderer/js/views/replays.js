@@ -10,7 +10,7 @@ export async function render(root) {
   root.append(
     h('header.page-head', h('div', h('div.pl-label.page-kicker', 'Video recordings'), h('h1', 'Replays'), h('p', 'Kirka.io does not provide match replays, so Polaris records the game window as video. Recordings stay on this computer.')),
       h('div.page-actions', recBtn, button('Open folder', () => api('app:openFolder', 'replays'), { iconName: 'folder' }))),
-    h('div.note', `Window capture records video only — on Linux there is no game audio. Hotkeys: ${store.settings.game.keybinds.record || 'not set'} to start/stop, ${store.settings.game.keybinds.bookmark || 'not set'} to bookmark while recording. Settings → Game controls resolution, bitrate and the time limit.`),
+    h('div.note', `Window capture records video only, without game audio. On macOS, allow Polaris under System Settings → Privacy & Security → Screen Recording first. Hotkeys: ${store.settings.game.keybinds.record || 'not set'} to start/stop, ${store.settings.game.keybinds.bookmark || 'not set'} to bookmark while recording. Settings → Game controls resolution, bitrate and the time limit.`),
     h('div.rp-layout', list, stage));
 
   const drawRec = () => clear(recBtn).append(recorder.isRecording()

@@ -1,6 +1,6 @@
 /* Replay recorder: captures the Polaris window (including the game view) with MediaRecorder.
  * Kirka.io has no replay API, so Polaris records video instead of match data.
- * Audio is not captured on Linux (Chromium window capture provides video only). */
+ * Video only: audio is not captured on any platform. */
 import { api, store, toast, emit } from './store.js';
 
 let rec = null;       // { id, mr, stream, startedAt, bookmarks, chain, timer, size }

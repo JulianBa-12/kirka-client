@@ -128,6 +128,7 @@ export function publicFiles(release, { showDeb = true } = {}) {
     if (/owner/i.test(f.name) || /owner/i.test(f.url || '')) return false;
     if (f.platform === 'linux-appimage') return true;
     if (f.platform === 'linux-deb') return !!showDeb;
+    if (['win-x64', 'mac-arm64', 'mac-x64'].includes(f.platform)) return true;
     return false;
   });
 }

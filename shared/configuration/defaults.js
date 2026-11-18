@@ -327,7 +327,7 @@ const WEBSITE_SITE = {
   },
   downloads: {
     showDeb: true,
-    installNotes: 'chmod +x Polaris-Client-1.1.0.AppImage\n./Polaris-Client-1.1.0.AppImage',
+    installNotes: 'chmod +x Polaris-Client-1.1.1.AppImage\n./Polaris-Client-1.1.1.AppImage',
   },
   footer: {
     note: 'Polaris is an unofficial community project and is not affiliated with Kirka.io.',

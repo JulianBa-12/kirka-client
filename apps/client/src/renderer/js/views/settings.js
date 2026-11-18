@@ -93,7 +93,7 @@ const SECTIONS = {
           if (e.key === 'Escape') { b.textContent = kb[id] || 'not set'; return; }
           if (e.key === 'Backspace' || e.key === 'Delete') { set((s) => { s.game.keybinds[id] = ''; }); b.textContent = 'not set'; return; }
           const key = e.key.length === 1 ? e.key.toUpperCase() : e.key;
-          const combo = [e.ctrlKey ? 'Ctrl' : null, e.shiftKey ? 'Shift' : null, e.altKey ? 'Alt' : null, key].filter(Boolean).join('+');
+          const combo = [(e.ctrlKey || (/Mac/.test(navigator.platform) && e.metaKey)) ? 'Ctrl' : null, e.shiftKey ? 'Shift' : null, e.altKey ? 'Alt' : null, key].filter(Boolean).join('+');
           if (!/^((Ctrl|Shift|Alt)\+){0,3}(F([1-9]|1[0-2])|[A-Z0-9]|Insert|Home|End|PageUp|PageDown|Pause|`)$/.test(combo)) { toast(`${combo} cannot be used. Use F1–F12, letters, digits or Insert/Home/End/PageUp/PageDown/Pause, optionally with Ctrl/Shift/Alt.`, 'warn', 6000); b.textContent = kb[id] || 'not set'; return; }
           const clash = Object.entries(store.settings.game.keybinds).find(([k, v]) => k !== id && v === combo);
           if (clash) { toast(`${combo} is already used for “${KEY_LABELS[clash[0]]}”`, 'warn'); b.textContent = kb[id] || 'not set'; return; }

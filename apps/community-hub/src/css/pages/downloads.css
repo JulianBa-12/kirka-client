@@ -80,3 +80,5 @@
   .dl-pending { grid-column: 1 / span 7; padding-top: var(--sp-10); }
   .dl-pending__side { grid-column: 9 / -1; margin-top: 0; padding-top: var(--sp-10); }
 }
+
+.dl-os { margin-bottom: var(--sp-4); }

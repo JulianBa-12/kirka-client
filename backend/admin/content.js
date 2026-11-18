@@ -148,12 +148,12 @@ function createOwnerContentRoutes(ctx) {
 
   /* ---------------- releases ---------------- */
   const fileSchema = s.object({
-    platform: s.enum(['linux-appimage', 'linux-deb']), name: s.string({ min: 1, max: 120, pattern: /^[A-Za-z0-9._-]+$/ }),
+    platform: s.enum(['linux-appimage', 'linux-deb', 'win-x64', 'mac-arm64', 'mac-x64']), name: s.string({ min: 1, max: 120, pattern: /^[A-Za-z0-9._-]+$/ }),
     url: s.string({ max: 500, pattern: /^https:\/\/[^\s"'<>]+$/ }), size: s.int({ min: 1 }), sha512: s.string({ min: 80, max: 100, pattern: /^[A-Za-z0-9+/=]+$/ }),
   });
   const relSchema = s.object({
     version: SEMVER, channel: s.enum(['stable', 'beta']), title: s.optional(s.string({ max: 120 }), ''), notes: s.optional(s.string({ max: 50000 }), ''),
-    files: s.optional(s.array(fileSchema, { max: 6 }), []), rollout: s.optional(s.int({ min: 0, max: 100 }), 100),
+    files: s.optional(s.array(fileSchema, { max: 10 }), []), rollout: s.optional(s.int({ min: 0, max: 100 }), 100),
     minimumVersion: s.optional(SEMVER, '1.0.0'), visible: s.optional(s.bool(), true),
   });
   const getRelease = (rid) => db.get('SELECT * FROM releases WHERE id = ?', rid);

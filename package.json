@@ -1,6 +1,6 @@
 {
   "name": "polaris",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Polaris — desktop client for Kirka.io, its self-hosted backend and the Community Hub website.",
   "license": "MIT",
