@@ -26,20 +26,37 @@
     "appId": "io.polaris.kirka",
     "productName": "Polaris Client",
     "artifactName": "Polaris-Client-${version}.${ext}",
-    "directories": { "output": "../../dist", "buildResources": "build" },
-    "files": ["src/**/*", "package.json", "!src/**/*.map"],
+    "directories": {
+      "output": "../../dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "!src/**/*.map"
+    ],
     "asar": true,
     "publish": null,
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Game",
       "icon": "build/icon.png",
       "executableName": "polaris-client",
       "synopsis": "Independent desktop client for Kirka.io",
       "description": "Polaris runs the official Kirka.io game in a dedicated window and adds a crosshair studio, HUD editor, skin studio, performance tools and a community hub.",
       "maintainer": "Polaris <noreply@polaris.invalid>",
-      "desktop": { "StartupWMClass": "polaris-client" }
+      "desktop": {
+        "StartupWMClass": "polaris-client"
+      }
     },
-    "deb": { "packageName": "polaris-client" }
+    "deb": {
+      "packageName": "polaris-client"
+    }
+  },
+  "dependencies": {
+    "ws": "^8.23.0"
   }
 }

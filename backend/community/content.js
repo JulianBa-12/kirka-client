@@ -31,6 +31,7 @@ function createContent(ctx) {
       likes: db.get('SELECT COUNT(*) AS n FROM item_likes WHERE item_id = ?', it.id).n,
       liked: viewerId ? !!db.get('SELECT 1 AS ok FROM item_likes WHERE item_id = ? AND user_id = ?', it.id, viewerId) : false,
       comments: db.get('SELECT COUNT(*) AS n FROM comments WHERE item_id = ?', it.id).n,
+      rating: (() => { const r = db.get('SELECT COUNT(*) AS n, AVG(stars) AS avg FROM item_ratings WHERE item_id = ?', it.id); return { count: r.n, average: r.n ? Math.round(r.avg * 10) / 10 : null, mine: viewerId ? (db.get('SELECT stars FROM item_ratings WHERE item_id = ? AND user_id = ?', it.id, viewerId) || {}).stars || null : null }; })(),
       reviewNote: it.review_note || null,
       author: author ? publicUser(author, { showPresence: false }) : null,
       createdAt: it.created_at, updatedAt: it.updated_at,
@@ -129,7 +130,7 @@ function createContentRoutes(ctx) {
       const a = db.get('SELECT id FROM users WHERE username = ?', req.query.author);
       where.push('author_id = ?'); params.push(a ? a.id : -1);
     }
-    const order = { popular: '(SELECT COUNT(*) FROM item_likes l WHERE l.item_id = items.id) DESC, downloads DESC', downloads: 'downloads DESC', new: 'created_at DESC' }[req.query.sort] || 'featured DESC, created_at DESC';
+    const order = { rating: '(SELECT COALESCE(AVG(stars), 0) * 1000 + COUNT(*) FROM item_ratings rt WHERE rt.item_id = items.id) DESC, downloads DESC', popular: '(SELECT COUNT(*) FROM item_likes l WHERE l.item_id = items.id) DESC, downloads DESC', downloads: 'downloads DESC', new: 'created_at DESC' }[req.query.sort] || 'featured DESC, created_at DESC';
     const sqlWhere = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const total = db.get(`SELECT COUNT(*) AS n FROM items ${sqlWhere}`, ...params).n;
     const rows = db.all(`SELECT * FROM items ${sqlWhere} ORDER BY ${order} LIMIT ? OFFSET ?`, ...params, limit, offset);
@@ -169,6 +170,21 @@ function createContentRoutes(ctx) {
     if (!visibleTo(it, req.user) || it.status !== 'approved') throw E.notFound('Item not found');
     db.run('INSERT INTO item_likes (item_id, user_id, created_at) VALUES (?,?,?) ON CONFLICT DO NOTHING', it.id, req.user.id, now());
     res.json({ likes: db.get('SELECT COUNT(*) AS n FROM item_likes WHERE item_id = ?', it.id).n, liked: true });
+  });
+  r.put('/items/:id/rating', mw.requireUser, (req, res) => {
+    const it = getItem(req.params.id);
+    if (!visibleTo(it, req.user) || it.status !== 'approved') throw E.notFound('Item not found');
+    const stars = Number(req.body && req.body.stars);
+    if (!Number.isInteger(stars) || stars < 1 || stars > 5) throw E.invalid([{ path: 'stars', message: 'must be an integer from 1 to 5' }]);
+    if (it.author_id === req.user.id) throw E.forbidden('You cannot rate your own item');
+    db.run('INSERT INTO item_ratings (item_id, user_id, stars, created_at, updated_at) VALUES (?,?,?,?,?) ON CONFLICT(item_id, user_id) DO UPDATE SET stars = excluded.stars, updated_at = excluded.updated_at', it.id, req.user.id, stars, now(), now());
+    res.json(items.serialize(getItem(it.id), req.user.id).rating);
+  });
+  r.delete('/items/:id/rating', mw.requireUser, (req, res) => {
+    const id = parseInt(req.params.id, 10) || 0;
+    db.run('DELETE FROM item_ratings WHERE item_id = ? AND user_id = ?', id, req.user.id);
+    const it = getItem(id);
+    res.json(it ? items.serialize(it, req.user.id).rating : { count: 0, average: null, mine: null });
   });
   r.delete('/items/:id/like', mw.requireUser, (req, res) => {
     db.run('DELETE FROM item_likes WHERE item_id = ? AND user_id = ?', parseInt(req.params.id, 10) || 0, req.user.id);

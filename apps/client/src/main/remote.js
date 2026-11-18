@@ -54,6 +54,18 @@ function accept(envelope, target, { allowPreview = false } = {}) {
   return payload;
 }
 
+/** A configuration published by an older Owner build does not know features added later.
+ *  Missing feature flags fall back to their built-in defaults instead of reading as "off"; flags
+ *  the Owner did publish always win. */
+function forwardCompat(domain, value) {
+  if (domain === 'client.features' && value && value.flags) {
+    const flags = clone(DEFAULTS['client.features'].flags);
+    for (const [k, v] of Object.entries(value.flags)) flags[k] = v;
+    return { ...value, flags };
+  }
+  return value;
+}
+
 /** Build the effective configuration: defaults overlaid with each valid remote domain. */
 function effective(payload) {
   const cfg = {}; const rejected = [];
@@ -62,7 +74,7 @@ function effective(payload) {
     for (const [domain, entry] of Object.entries(payload.domains || {})) {
       if (!BUNDLE_TARGETS.client.includes(domain)) continue;
       const r = validateDomain(domain, entry && entry.data);
-      if (r.ok) cfg[domain] = r.value; else { rejected.push({ domain, errors: r.errors.slice(0, 5) }); }
+      if (r.ok) cfg[domain] = forwardCompat(domain, r.value); else { rejected.push({ domain, errors: r.errors.slice(0, 5) }); }
     }
   }
   return { config: cfg, rejected, announcements: (payload && Array.isArray(payload.announcements)) ? payload.announcements.slice(0, 20) : [] };

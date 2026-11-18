@@ -223,6 +223,12 @@ test('community uploads, moderation, likes, comments, downloads', async () => {
   const after = await call('GET', '/community/items?kind=skin', { expect: 200 });
   assert.ok(after.data.items.some((i) => i.id === id));
   await call('POST', `/community/items/${id}/like`, { token: T.bob, expect: 200 });
+  const rated = await call('PUT', `/community/items/${id}/rating`, { token: T.bob, body: { stars: 4 }, expect: 200 });
+  assert.deepEqual(rated.data, { count: 1, average: 4, mine: 4 });
+  await call('PUT', `/community/items/${id}/rating`, { token: T.bob, body: { stars: 9 }, expect: 422 });
+  await call('PUT', `/community/items/${id}/rating`, { token: T.alice, body: { stars: 5 }, expect: 403 });
+  const byRating = await call('GET', '/community/items?sort=rating&kind=skin', { expect: 200 });
+  assert.equal(byRating.data.items[0].rating.average, 4);
   await call('POST', `/community/items/${id}/comments`, { token: T.bob, body: { body: 'Looks great' }, expect: 201 });
   const dl = await call('GET', `/community/items/${id}/download`, { expect: 200 });
   assert.ok(dl.data.url || dl.data.fileUrl || dl.data.byteLength, 'download returns the file or its URL');

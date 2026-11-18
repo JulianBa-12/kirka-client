@@ -1,5 +1,5 @@
 import { h, icon, button, fmt, clear, empty } from '../lib/dom.js';
-import { api, store, cfg, flag, subscribe, updateSettings, modal } from '../lib/store.js';
+import { api, store, cfg, flag, subscribe, updateSettings, modal, t } from '../lib/store.js';
 import { go } from '../app.js';
 import * as dom from '../lib/dom.js';
 
@@ -21,7 +21,7 @@ const WIDGETS = {
     const last = ctx.analytics.sessions.slice(-1)[0];
     return h('section.home-hero',
       h('div.home-hero-text',
-        h('div.pl-label.page-kicker', `${greetingWord()}${name ? `, ${name}` : ''}`),
+        h('div.pl-label.page-kicker', `${t(greetingWord())}${name ? `, ${name}` : ''}`),
         h('h1.home-title', cfg('client.home').greeting || 'Welcome back'),
         h('p.text2', last ? `Last session ${fmt.ago(last.end)} · ${fmt.dur(last.inMatchSec)} in matches${last.fpsAvg != null ? ` · ${Math.round(last.fpsAvg)} fps average` : ''}` : 'No sessions recorded yet. Polaris starts counting the first time you open the game.')),
       h('div.home-hero-actions',

@@ -5,8 +5,8 @@
  */
 const { contextBridge, ipcRenderer } = require('electron');
 
-const INVOKE = /^(win|shell|app|game|settings|config|profiles|library|dialog|analytics|metrics|maps|replays|updates|plugins|server|cloud|market):[a-zA-Z]{2,32}$/;
-const EVENTS = new Set(['win:state', 'game:state', 'game:match', 'metrics:sample', 'updates:status', 'hotkey', 'toast', 'config:changed', 'settings:changed']);
+const INVOKE = /^(win|shell|app|game|settings|config|profiles|library|dialog|analytics|metrics|maps|replays|updates|plugins|server|cloud|market|workspace|journal|automation|backups|diagnostics|realtime):[a-zA-Z]{2,32}$/;
+const EVENTS = new Set(['win:state', 'game:state', 'game:match', 'metrics:sample', 'updates:status', 'hotkey', 'toast', 'config:changed', 'settings:changed', 'realtime:status', 'realtime:event']);
 
 async function invoke(channel, ...args) {
   if (typeof channel !== 'string' || !INVOKE.test(channel)) throw new Error(`Channel not allowed: ${channel}`);

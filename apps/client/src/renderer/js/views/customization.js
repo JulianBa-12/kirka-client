@@ -11,15 +11,18 @@ export async function render(root, params = {}) {
     { id: 'backgrounds', label: 'Backgrounds', flag: 'backgroundStudio' },
     { id: 'themes', label: 'Themes' },
     { id: 'gamecss', label: 'Game style' },
-  ].filter((t) => !t.flag || flag(t.flag).visible);
+  ].filter((t) => !t.flag || flag(t.flag).visible).filter((t) => (params.single ? t.id === params.tab : !['crosshair', 'hud', 'backgrounds'].includes(t.id)));
+  if (!TABS.length) { root.append(h('div.note.note-warn', 'This studio is turned off by the Polaris team right now.')); return; }
   let tab = TABS.some((t) => t.id === params.tab) ? params.tab : TABS[0].id;
   let cleanupTab = null;
   const body = h('div');
-  const head = h('header.page-head', h('div', h('div.pl-label.page-kicker', 'Look and feel'), h('h1', 'Customization'), h('p', 'Overlays and styles Polaris adds around Kirka.io. Nothing here changes gameplay, hit registration or what other players see.')));
+  const SINGLE = { crosshair: ['Crosshair Studio', 'Draw your own crosshair overlay. It is a picture on top of the game — it does not change aim, spread or hit registration.'], hud: ['HUD Editor', 'Arrange and style the overlays Polaris draws on top of Kirka.io.'], backgrounds: ['Backgrounds', 'Up to 50 images or videos for menus and the Polaris shell, with optional rotation.'] };
+  const [title, intro] = params.single ? SINGLE[tab] : ['Themes & Style', 'Overlays and styles Polaris adds around Kirka.io. Nothing here changes gameplay, hit registration or what other players see.'];
+  const head = h('header.page-head', h('div', h('div.pl-label.page-kicker', 'Look and feel'), h('h1', title), h('p', intro)));
   const bar = h('div');
   const draw = async () => {
     if (cleanupTab) { cleanupTab(); cleanupTab = null; }
-    clear(bar).appendChild(tabs(TABS.map((t) => ({ ...t, badge: t.flag && !flag(t.flag).enabled ? 'Off' : null })), tab, (id) => { tab = id; draw(); }));
+    if (!params.single) clear(bar).appendChild(tabs(TABS.map((t) => ({ ...t, badge: t.flag && !flag(t.flag).enabled ? 'Off' : null })), tab, (id) => { tab = id; draw(); }));
     clear(body);
     const t = TABS.find((x) => x.id === tab);
     if (t.flag && !flag(t.flag).enabled) { body.appendChild(h('div.note.note-warn', `${flag(t.flag).label} is turned off by the Polaris team right now.`)); return; }

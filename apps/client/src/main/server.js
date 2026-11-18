@@ -111,4 +111,4 @@ async function downloadFile(url, maxBytes = 64 * 1024 * 1024) {
   return { buffer: buf, type: res.headers.get('content-type') || 'application/octet-stream' };
 }
 
-module.exports = { loadToken, request, login, register, logout, session, uploadItem, uploadAvatar, downloadFile, base, ApiError, get me() { return me; }, get signedIn() { return !!token; } };
+module.exports = { authToken: () => token, loadToken, request, login, register, logout, session, uploadItem, uploadAvatar, downloadFile, base, ApiError, get me() { return me; }, get signedIn() { return !!token; } };

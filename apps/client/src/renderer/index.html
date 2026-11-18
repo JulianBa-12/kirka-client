@@ -29,6 +29,8 @@
     <div class="tb-context" id="tb-context"></div>
     <div class="tb-status" id="tb-status"></div>
     <div class="tb-controls">
+      <button class="tb-btn" id="tb-cmd" title="Command Center (Ctrl+K)" aria-label="Command Center"></button>
+      <button class="tb-btn" id="tb-quick" title="Quick access" aria-label="Quick access"></button>
       <button class="tb-btn" id="tb-play" title="Toggle game (F1)"></button>
       <button class="tb-btn" id="tb-full" title="Fullscreen (F11)"></button>
       <button class="tb-btn" id="tb-min" title="Minimize"></button>
@@ -41,6 +43,7 @@
     <nav class="rail" id="rail" aria-label="Main navigation"></nav>
     <main class="stage" id="stage">
       <div class="stage-bg" id="stage-bg" aria-hidden="true"></div>
+      <div class="banners" id="banners" aria-live="polite"></div>
       <div class="view" id="view" tabindex="-1"></div>
     </main>
   </div>

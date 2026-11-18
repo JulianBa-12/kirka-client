@@ -368,6 +368,21 @@ CREATE INDEX idx_owner_devices_user ON owner_devices(user_id);
 ALTER TABLE sessions ADD COLUMN device_id TEXT;
 `,
   },
+  {
+    version: 3,
+    name: 'item ratings',
+    sql: `
+CREATE TABLE item_ratings (
+  item_id INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  stars INTEGER NOT NULL CHECK (stars BETWEEN 1 AND 5),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (item_id, user_id)
+);
+CREATE INDEX idx_item_ratings_item ON item_ratings(item_id);
+`,
+  },
 ];
 
 function migrate(db, log) {

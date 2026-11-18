@@ -14,8 +14,8 @@ const state = require('./state');
 const { validate } = require('../shared/utilities/schema');
 const { ITEM_SCHEMAS } = require('../shared/configuration/domains');
 
-const KINDS = ['skin', 'background', 'resource', 'crosshair', 'hud', 'theme'];
-const MAX_BYTES = { skin: 2 << 20, background: 40 << 20, resource: 16 << 20, crosshair: 64 << 10, hud: 256 << 10, theme: 256 << 10 };
+const KINDS = ['skin', 'background', 'resource', 'crosshair', 'hud', 'theme', 'workspace'];
+const MAX_BYTES = { skin: 2 << 20, background: 40 << 20, resource: 16 << 20, crosshair: 64 << 10, hud: 256 << 10, theme: 256 << 10, workspace: 64 << 10 };
 
 /** Magic-byte sniffing; the declared type/extension is never trusted. */
 function sniff(buf) {
@@ -39,7 +39,7 @@ const ALLOWED = {
   skin: ['image/png'],
   background: ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'video/webm', 'video/mp4'],
   resource: ['image/png', 'image/jpeg', 'image/webp', 'audio/ogg', 'audio/mpeg', 'audio/wav'],
-  crosshair: ['application/json'], hud: ['application/json'], theme: ['application/json'],
+  crosshair: ['application/json'], hud: ['application/json'], theme: ['application/json'], workspace: ['application/json'],
 };
 
 function pngSize(buf) { return buf.length > 24 && buf.toString('hex', 0, 8) === '89504e470d0a1a0a' ? { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) } : {}; }

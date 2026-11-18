@@ -1,4 +1,6 @@
 /* Small DOM helpers. All text goes through textContent / escaping — never raw HTML from data. */
+import { t } from './i18n.js';
+const TRANSLATED_ATTRS = new Set(['title', 'placeholder', 'aria-label']);
 
 export function esc(v) {
   return String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -28,7 +30,7 @@ export function h(sel, props, ...children) {
     else if (k === 'html') el.innerHTML = v; // only used with trusted, locally built markup (icons)
     else if (k === 'dataset') Object.assign(el.dataset, v);
     else if (k in el && !['list', 'form', 'type'].includes(k) && typeof v !== 'string') el[k] = v;
-    else el.setAttribute(k, v === true ? '' : v);
+    else el.setAttribute(k, v === true ? '' : (TRANSLATED_ATTRS.has(k) && typeof v === 'string' ? t(v) : v));
   }
   append(el, children);
   return el;
@@ -37,7 +39,7 @@ export function h(sel, props, ...children) {
 function append(el, children) {
   for (const c of children.flat(Infinity)) {
     if (c == null || c === false) continue;
-    el.appendChild(c instanceof Node ? c : document.createTextNode(String(c)));
+    el.appendChild(c instanceof Node ? c : document.createTextNode(typeof c === 'string' ? t(c) : String(c)));
   }
 }
 

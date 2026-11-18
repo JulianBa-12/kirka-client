@@ -1,5 +1,7 @@
 /* Application state shared by all views. */
 import { h, clear, button, debounce } from './dom.js';
+import { t } from './i18n.js';
+export { t };
 
 export const api = (ch, ...args) => window.polaris.invoke(ch, ...args);
 export const on = (ev, fn) => window.polaris.on(ev, fn);
@@ -46,9 +48,9 @@ export async function reloadRemote() { store.remote = await api('config:get'); e
 /* ---------- toasts ---------- */
 export function toast(text, level = 'info', ms = 4200) {
   const root = document.getElementById('toasts');
-  const t = h(`div.toast.toast-${level}`, { role: level === 'error' ? 'alert' : 'status' }, h('span', text));
-  root.appendChild(t);
-  setTimeout(() => { t.classList.add('is-leaving'); setTimeout(() => t.remove(), 200); }, ms);
+  const el = h(`div.toast.toast-${level}`, { role: level === 'error' ? 'alert' : 'status' }, h('span', text));
+  root.appendChild(el);
+  setTimeout(() => { el.classList.add('is-leaving'); setTimeout(() => el.remove(), 200); }, ms);
 }
 export function fail(e, prefix = '') { toast(`${prefix}${e && e.message ? e.message : e}`, 'error', 6000); }
 
@@ -58,7 +60,7 @@ export function modal({ title, body, actions = [], wide = false, onClose }) {
   const close = () => { root.classList.remove('is-open'); clear(root); document.removeEventListener('keydown', esc); if (onClose) onClose(); };
   const esc = (e) => { if (e.key === 'Escape') close(); };
   const dialog = h(`div.modal${wide ? '.modal-wide' : ''}`, { role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
-    h('header.modal-head', h('h3', title), button('', close, { iconName: 'close', small: true, title: 'Close' })),
+    h('header.modal-head', h('h3', t(title)), button('', close, { iconName: 'close', small: true, title: 'Close' })),
     h('div.modal-body', body),
     actions.length ? h('footer.modal-foot', ...actions.map((a) => button(a.label, async () => { const keep = await a.onClick(close); if (keep !== true) close(); }, { kind: a.kind || 'ghost', iconName: a.icon }))) : null);
   clear(root).appendChild(h('div.modal-backdrop', { on: { click: (e) => { if (e.target === e.currentTarget) close(); } } }, dialog));

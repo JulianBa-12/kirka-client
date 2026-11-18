@@ -26,6 +26,7 @@ const { ITEM_SCHEMAS, CLIENT_DESTINATIONS, HOME_WIDGETS, HUD_ELEMENTS, PLUGIN_PE
 let ctx = null;
 const UUID = /^[0-9a-f-]{36}$/;
 const str = (v, max = 200) => (typeof v === 'string' ? v.slice(0, max) : '');
+const strList = (v, n, max) => (Array.isArray(v) ? [...new Set(v.filter((x) => typeof x === 'string' && x.length <= max))].slice(0, n) : []);
 
 /* ---------------- settings ---------------- */
 const KEY_RE = /^((Ctrl|Shift|Alt)\+){0,3}(F([1-9]|1[0-2])|[A-Z0-9]|Insert|Home|End|PageUp|PageDown|Pause|`)$/;
@@ -51,6 +52,24 @@ function sanitizeSettings(incoming) {
   s.advanced.selectorsOverride = str(s.advanced.selectorsOverride, 4000);
   if (!['stable', 'beta'].includes(s.updates.channel)) s.updates.channel = 'stable';
   s.home.hidden = Array.isArray(s.home.hidden) ? s.home.hidden.filter((x) => typeof x === 'string').slice(0, 20) : [];
+  s.home.order = strList(s.home.order, 20, 40);
+  if (!['en', 'de'].includes(s.general.language)) s.general.language = 'en';
+  const dests = new Set(CLIENT_DESTINATIONS.map((d) => d.id));
+  s.layout.navOrder = strList(s.layout.navOrder, 40, 40).filter((d) => dests.has(d));
+  s.layout.navHidden = strList(s.layout.navHidden, 40, 40).filter((d) => dests.has(d) && !['home', 'settings'].includes(d));
+  s.layout.toolsOpen = !!s.layout.toolsOpen;
+  s.layout.quickAccess = strList(s.layout.quickAccess, 8, 60);
+  const usage = {};
+  for (const [k, v] of Object.entries(s.commands.usage || {}).slice(0, 300)) if (/^[\w:.-]{1,60}$/.test(k) && Number.isFinite(Number(v))) usage[k] = Math.min(1e6, Math.max(0, Math.round(Number(v))));
+  s.commands.usage = usage;
+  const sc = {}; const reserved = new Set(Object.values(s.game.keybinds));
+  for (const [k, v] of Object.entries(s.commands.shortcuts || {}).slice(0, 60)) if (/^[\w:.-]{1,60}$/.test(k) && typeof v === 'string' && KEY_RE.test(v) && !reserved.has(v)) sc[k] = v;
+  s.commands.shortcuts = sc;
+  if (!KEY_RE.test(s.commands.paletteKey || '') || reserved.has(s.commands.paletteKey)) s.commands.paletteKey = 'Ctrl+K';
+  s.backups.auto = !!s.backups.auto;
+  s.backups.keep = Math.min(100, Math.max(3, Math.round(Number(s.backups.keep)) || 20));
+  s.realtime.enabled = !!s.realtime.enabled;
+  if (s.activeWorkspaceId && !state.workspaces.get().items.some((w) => w.id === s.activeWorkspaceId)) s.activeWorkspaceId = null;
   s.replays.fps = [30, 60].includes(Number(s.replays.fps)) ? Number(s.replays.fps) : 60;
   s.replays.bitrateMbps = Math.min(40, Math.max(1, Number(s.replays.bitrateMbps) || 8));
   s.replays.maxMinutes = Math.min(180, Math.max(1, Math.round(Number(s.replays.maxMinutes)) || 30));
@@ -557,7 +576,7 @@ handle('market:install', async (itemId) => {
     return { plugin: stagePlugin(data.toString('utf8'), 'marketplace', { remoteId: id, approvedPermissions: (item.metadata && item.metadata.approvedPermissions) || [], expectedSha256: (item.metadata && item.metadata.manifest && item.metadata.manifest.sha256) || null }) };
   }
   let payload = data; const meta = {};
-  if (['crosshair', 'hud', 'theme'].includes(item.kind)) {
+  if (['crosshair', 'hud', 'theme', 'workspace'].includes(item.kind)) {
     const r = validate(ITEM_SCHEMAS[item.kind], JSON.parse(data.toString('utf8')));
     if (!r.ok) throw new Error(`Downloaded ${item.kind} is invalid`);
     payload = Buffer.from(JSON.stringify(r.value));
@@ -568,4 +587,4 @@ handle('market:install', async (itemId) => {
   return { libraryItem: library.get(added.id) };
 });
 
-module.exports = { registerIpc, applyProfile, sanitizeSettings, CHANNELS: () => Object.keys(H) };
+module.exports = { registerIpc, applyProfile, applyData, applyPerformanceProfile, sanitizeSettings, saveSettings, cleanProfile, pickSave, pickFiles, readSmall, handle, getCtx: () => ctx, CHANNELS: () => Object.keys(H) };

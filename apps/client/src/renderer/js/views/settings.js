@@ -1,6 +1,8 @@
 import { h, button, clear, tabs, fmt, row, toggle, select, range, field } from '../lib/dom.js';
 import { api, store, toast, fail, confirmDialog, modal, updateSettings, reloadSettings, reloadRemote, refreshServer, signedIn } from '../lib/store.js';
-import { go } from '../app.js';
+import { go, startOnboarding } from '../app.js';
+import { LANGUAGES } from '../lib/i18n.js';
+import { comboOf, assignShortcut, allCommands } from '../lib/commands.js';
 
 const CATS = [
   { id: 'general', label: 'General' }, { id: 'appearance', label: 'Appearance' }, { id: 'performance', label: 'Performance' }, { id: 'game', label: 'Game' },
@@ -37,6 +39,7 @@ const SECTIONS = {
   general(body) {
     const views = store.info.destinations.filter((d) => !['settings', 'updates'].includes(d.id)).map((d) => ({ value: d.id, label: d.label }));
     body.append(h('div.rows',
+      row('Language', 'Interface language. Community content and server messages stay in the language they were written in.', select(LANGUAGES, store.settings.general.language, (v) => set((s) => { s.general.language = v; }))),
       row('Start on', 'The page Polaris opens with.', select(views, store.settings.general.startView, (v) => set((s) => { s.general.startView = v; }))),
       row('Launch the game on start', 'Go straight to Kirka.io when Polaris opens.', sw((s) => s.general.autoLaunchGame, (s, v) => { s.general.autoLaunchGame = v; })),
       row('Start in fullscreen', null, sw((s) => s.general.startFullscreen, (s, v) => { s.general.startFullscreen = v; })),
@@ -48,7 +51,7 @@ const SECTIONS = {
         b.addEventListener('click', () => { set((s) => { s.home.hidden = s.home.hidden.includes(w.id) ? s.home.hidden.filter((x) => x !== w.id) : [...s.home.hidden, w.id]; }); b.classList.toggle('is-active'); });
         return b;
       }))),
-      row('Show the welcome guide again', null, button('Show', () => { set((s) => { s.onboardingDone = false; }); setTimeout(() => location.reload(), 300); }, { small: true }))));
+      row('Run Smart Setup again', 'Re-check this computer and review the recommendations. Nothing changes until you finish.', button('Start', () => startOnboarding(), { small: true }))));
   },
 
   appearance(body) {
@@ -170,6 +173,8 @@ const SECTIONS = {
           st.client && !st.client.ok ? [h('dt', 'Last check'), h('dd.text-danger', (st.client.errors || []).join(' · '))] : null),
         h('p.muted.small', 'Configuration is signed by the project owner. Unsigned or tampered bundles are rejected and the last verified copy is used. It can change texts, colours, layout and features, but can never run code.'),
         h('div.inline', button('Check for new configuration', async () => { try { await api('config:refresh'); await reloadRemote(); toast('Configuration refreshed', 'ok'); redraw(); } catch (e) { fail(e); } }, { small: true, iconName: 'refresh' }))),
+      await realtimeSection(redraw),
+      commandSection(redraw),
       h('section.section', h('div.section-head', h('h2', 'Test mode'), h('span.muted.small', 'for the project owner')),
         h('div.rows', row('Test mode', 'Shows draft-preview tools. Has no effect for normal play.', sw((s) => s.advanced.testMode, (s, v) => { s.advanced.testMode = v; }, {}))),
         store.settings.advanced.testMode ? h('div.inline', button('Load preview bundle…', async () => { try { const r = await api('config:loadPreview'); if (r) { await reloadRemote(); toast(r.rejected && r.rejected.length ? `Loaded with rejected parts: ${r.rejected.join(', ')}` : 'Preview configuration loaded', r.rejected && r.rejected.length ? 'warn' : 'ok', 6000); redraw(); } } catch (e) { fail(e); } }, { small: true }),
@@ -195,6 +200,44 @@ const SECTIONS = {
       }, { small: true, kind: 'danger' }), { danger: true }))));
   },
 };
+
+async function realtimeSection(redraw) {
+  let st = {};
+  try { st = await api('realtime:status'); } catch {}
+  const stateText = { connected: 'Connected', connecting: 'Connecting…', off: 'Off', error: 'Error', closed: 'Disconnected' }[st.state] || st.state || 'unknown';
+  return h('section.section', h('div.section-head', h('h2', 'Realtime connection'), h(`span.badge${st.state === 'connected' ? '.badge-ok' : '.badge-muted'}`, stateText)),
+    h('div.rows', row('Live updates', 'Keep a WebSocket connection to the Polaris server so configuration, announcements, maintenance notices and notifications arrive instantly. Without it, Polaris checks periodically.', sw((s) => s.realtime.enabled, (s, v) => { s.realtime.enabled = v; }, {}))),
+    h('dl.kv', h('dt', 'Server'), h('dd.mono.small', st.url || '—'), h('dt', 'Status'), h('dd', st.reason ? `${stateText} — ${st.reason}` : stateText),
+      h('dt', 'Signed in'), h('dd', st.authenticated ? 'yes (personal notifications)' : 'no'), h('dt', 'Events received'), h('dd.mono', String(st.events ?? 0)),
+      h('dt', 'Last event'), h('dd', st.lastEventAt ? `${st.lastEvent} · ${fmt.datetime(st.lastEventAt)}` : '—'), h('dt', 'Reconnects'), h('dd.mono', String(st.reconnects ?? 0))),
+    h('div.inline', button('Reconnect', async () => { try { await api('realtime:reconnect'); setTimeout(redraw, 800); } catch (e) { fail(e); } }, { small: true, iconName: 'refresh' }),
+      button('Restart Polaris', () => api('app:relaunch'), { small: true, kind: 'quiet' })));
+}
+
+function commandSection(redraw) {
+  const sc = store.settings.commands.shortcuts || {};
+  const capture = () => {
+    const shown = h('div.palette-capture.mono', store.settings.commands.paletteKey);
+    const overlay = h('div.palette-overlay', h('div.palette.palette-small', h('div.stack', h('h2.section-title', 'Command Center shortcut'), h('p.text2', 'Press the new combination (with Ctrl, Alt or Shift, or a function key). Esc cancels.'), shown)));
+    const done = () => { window.removeEventListener('keydown', onKey, true); overlay.remove(); };
+    function onKey(e) {
+      e.preventDefault(); e.stopPropagation();
+      if (e.key === 'Escape') return done();
+      const c = comboOf(e); if (!c) return;
+      if (!/^(Ctrl|Alt|Shift)\+|^F\d{1,2}$/.test(c)) { shown.textContent = `${c} — needs a modifier`; return; }
+      if (Object.values(store.settings.game.keybinds).includes(c)) { shown.textContent = `${c} — already used by a game keybind`; return; }
+      updateSettings((s) => { s.commands.paletteKey = c; }, { immediate: true }).then(() => { toast(`Command Center: ${c}`, 'ok'); done(); redraw(); }).catch((er) => { fail(er); done(); });
+    }
+    window.addEventListener('keydown', onKey, true); document.body.append(overlay);
+  };
+  return h('section.section', h('div.section-head', h('h2', 'Command Center')),
+    h('div.rows', row('Open with', 'Works in Polaris and inside the game.', h('div.inline', h('kbd', store.settings.commands.paletteKey), button('Change', capture, { small: true }))),
+      row('Custom shortcuts', 'Assign shortcuts in the Command Center: select a command and press Alt+Enter.', h('span.mono.small', `${Object.keys(sc).length} assigned`))),
+    Object.keys(sc).length ? h('div.rows', Object.entries(sc).map(([k, id]) => row(h('kbd', k), id, h('div.inline',
+      button('Change', async () => { const c = (await allCommands()).find((x) => x.id === id); if (c) assignShortcut(c); else toast('That command is not available right now', 'warn'); }, { small: true, kind: 'quiet' }),
+      button('Remove', () => updateSettings((s) => { delete s.commands.shortcuts[k]; }).then(redraw), { small: true, kind: 'quiet' }))))) : null,
+    h('div.inline', button('Reset usage ranking', () => updateSettings((s) => { s.commands.usage = {}; }).then(() => toast('Ranking reset', 'ok', 1500)), { small: true, kind: 'quiet' })));
+}
 
 async function showLogs() {
   const entries = await api('app:logs', 500);

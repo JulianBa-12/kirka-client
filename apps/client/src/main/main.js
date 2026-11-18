@@ -38,6 +38,8 @@ const plugins = require('./plugins');
 const server = require('./server');
 let presenceInMatch = false;
 const { registerIpc } = require('./ipc');
+const extras = require('./extras');
+let gameStartedFired = false;
 
 const TITLEBAR = 38;
 let win = null; let mode = 'shell';
@@ -144,7 +146,11 @@ function createWindow() {
 
   game.create(win);
   game.on('input', ({ event, input }) => hotkey(event, input, 'game'));
-  game.on('state', (st) => { send('game:state', st); if ('inMatch' in st) { tracker.inMatch(st.inMatch); presenceInMatch = st.inMatch; } });
+  game.on('state', (st) => {
+    send('game:state', st);
+    if (st.loaded && !gameStartedFired) { gameStartedFired = true; extras.fire('gameStart'); }
+    if ('inMatch' in st) { if (st.inMatch !== presenceInMatch) extras.fire(st.inMatch ? 'matchStart' : 'matchEnd'); tracker.inMatch(st.inMatch); presenceInMatch = st.inMatch; }
+  });
   game.on('metrics', (m) => { metrics.setGameMetrics(m); tracker.metrics(m); });
   metrics.onSample((snap) => send('metrics:sample', snap));
   metrics.onRtt((ms) => game.sendPing(ms));
@@ -184,7 +190,9 @@ function hotkey(e, input, from) {
   if (from === 'game' && matches(kb.reloadGame, input)) { e.preventDefault(); game.reload(); return; }
   if (matches(kb.record, input)) { e.preventDefault(); send('hotkey', 'record'); return; }
   if (matches(kb.bookmark, input)) { e.preventDefault(); send('hotkey', 'bookmark'); game.toast('Bookmark added'); return; }
-  if (matches(kb.screenshot, input)) { e.preventDefault(); screenshot(); }
+  if (matches(kb.screenshot, input)) { e.preventDefault(); screenshot(); return; }
+  const pk = state.settings.get().commands.paletteKey;
+  if (pk && matches(pk, input)) { e.preventDefault(); if (mode === 'play') setMode('shell'); send('hotkey', 'palette'); }
 }
 
 async function screenshot() {
@@ -279,8 +287,9 @@ app.whenReady().then(async () => {
   registerIpc({ getWin: () => win, setMode, getMode: () => mode, send, tracker, startupFlags: STARTUP_FLAGS, layout });
   createWindow();
   metrics.start();
-  powerMonitor.on('on-battery', () => applyPowerRule(true));
-  powerMonitor.on('on-ac', () => applyPowerRule(false));
+  powerMonitor.on('on-battery', () => { applyPowerRule(true); extras.fire('battery'); });
+  powerMonitor.on('on-ac', () => { applyPowerRule(false); extras.fire('ac'); });
+  extras.start({ onConfig: (cur) => game.setRemoteConfig(cur.config) });
 
   // Network work happens after the window is up; the client is fully usable offline.
   remote.refresh('client').then((cur) => { game.setRemoteConfig(cur.config); send('config:changed'); }).catch(() => {});
@@ -296,5 +305,5 @@ app.whenReady().then(async () => {
   if (state.settings.get().general.autoLaunchGame) setMode('play');
 });
 
-app.on('before-quit', () => { tracker.save(); state.flushAll(); });
+app.on('before-quit', () => { tracker.save(); state.flushAll(); try { extras.realtime.stop(); } catch {} });
 app.on('window-all-closed', () => app.quit());
