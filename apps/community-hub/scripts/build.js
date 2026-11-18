@@ -94,6 +94,23 @@ if (DATA_OVERRIDE) {
 }
 write(path.join(OUT, '.nojekyll'), '');
 
+// technical documentation from <repo>/docs (rendered on documentation.html)
+const DOCS = [
+  ['install', 'INSTALL.md', 'Users'], ['release-notes', 'RELEASE_NOTES.md', 'Users'], ['plugins', 'PLUGINS.md', 'Creators'],
+  ['architecture', 'ARCHITECTURE.md', 'Developers'], ['api', 'API.md', 'Developers'], ['development', 'DEVELOPMENT.md', 'Developers'],
+  ['testing', 'TESTING.md', 'Developers'], ['owner-setup', 'OWNER_SETUP.md', 'Self-hosting'],
+];
+const docIndex = [];
+for (const [id, file, group] of DOCS) {
+  const src = path.join(ROOT, 'docs', file);
+  if (!fs.existsSync(src)) continue;
+  const text = read(src);
+  write(path.join(OUT, 'docs', `${id}.md`), text);
+  const title = ((/^#\s+(.+)$/m.exec(text) || [])[1] || file).trim();
+  docIndex.push({ id, title, group, file, bytes: Buffer.byteLength(text), sha: hash(text) });
+}
+write(path.join(OUT, 'docs', 'index.json'), JSON.stringify({ generatedAt: new Date().toISOString(), docs: docIndex }, null, 1));
+
 // ---------------------------------------------------------------- templating
 const site = DEFAULTS['website.site'];
 const partial = (n) => read(path.join(APP, 'src/partials', n));
@@ -119,7 +136,7 @@ const CSP = [
   "style-src 'self'",
   "img-src 'self' https: data: http://127.0.0.1:* http://localhost:*",
   "font-src 'self'",
-  "connect-src 'self' https: http://127.0.0.1:* http://localhost:*",
+  "connect-src 'self' https: wss: http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:*",
   "media-src 'self' https:",
   "object-src 'none'",
   "base-uri 'self'",

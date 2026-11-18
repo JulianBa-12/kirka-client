@@ -1,0 +1,11 @@
+/* Contact: routing list + private message form. */
+.contact { padding-block: var(--sp-10) var(--section-y); row-gap: var(--sp-10); }
+.contact__list { border-top: 2px solid var(--c-text); }
+.contact__list > div { display: grid; gap: var(--sp-1); padding: var(--sp-4) 0; border-bottom: var(--bw) solid var(--c-line); }
+.contact__list dt { font-weight: 600; }
+.contact__list dd { color: var(--c-text2); font-size: var(--fs-md); }
+.contact__fallback { margin-top: var(--sp-4); }
+@media (min-width: 1000px) {
+  .contact__routes { grid-column: 1 / span 5; }
+  .contact__form { grid-column: 7 / span 6; }
+}

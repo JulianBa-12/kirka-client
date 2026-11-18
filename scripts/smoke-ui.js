@@ -2,6 +2,7 @@
 // UI smoke test: drives a running Polaris desktop app through the Chrome DevTools Protocol,
 // opens every view, records uncaught exceptions / console errors and saves screenshots.
 // Usage: node scripts/smoke-ui.js <port> <outDir> [views...]
+// Polaris Owner: SMOKE_MODULE=./app.js SMOKE_FN=navigate
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -43,14 +44,14 @@ async function target(match) {
   const shot = async (name) => { const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(path.join(out, `${name}.png`), Buffer.from(r.result.data, 'base64')); };
   if (process.env.SMOKE_PRE) { const r = await evalJs(process.env.SMOKE_PRE); console.log('pre:', r); await sleep(1500); }
   await shot('00-boot');
-  const views = VIEWS.length ? VIEWS : ['home', 'play', 'customization', 'skins', 'inventory', 'marketplace', 'social', 'analytics', 'replays', 'performance', 'profiles', 'resources', 'maps', 'plugins', 'updates', 'hub', 'settings'];
+  const views = VIEWS.length ? VIEWS : ['home', 'play', 'inventory', 'skins', 'backgrounds', 'maps', 'customization', 'performance', 'hud', 'crosshair', 'analytics', 'replays', 'social', 'marketplace', 'plugins', 'settings', 'hub', 'gallery', 'workspace', 'lab', 'journal', 'automation', 'backups', 'diagnostics', 'profiles', 'resources', 'updates'];
   let n = 1;
   for (const v of views) {
     const [route, after] = v.split('|');
     const [dest, q] = route.split('?');
     const params = q ? Object.fromEntries(new URLSearchParams(q)) : {};
     current = v;
-    const r = await evalJs(`(async()=>{ document.querySelectorAll('.modal-backdrop,.modal').forEach(m=>m.remove()); const m = await import('./js/app.js'); await m.go(${JSON.stringify(dest)}, ${JSON.stringify(params)}); return 'ok'; })()`);
+    const r = await evalJs(`(async()=>{ document.querySelectorAll('.modal-backdrop,.modal').forEach(m=>m.remove()); const m = await import(${JSON.stringify(process.env.SMOKE_MODULE || './js/app.js')}); await m[${JSON.stringify(process.env.SMOKE_FN || 'go')}](${JSON.stringify(dest)}, ${JSON.stringify(params)}); return 'ok'; })()`);
     if (r !== 'ok') errors.push({ view: v, text: `go failed: ${r}` });
     await sleep(1800);
     if (after) { const a = await evalJs(after); if (typeof a === 'string' && a.startsWith('Error')) errors.push({ view: v, text: a }); await sleep(1200); }

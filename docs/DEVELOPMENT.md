@@ -73,6 +73,7 @@ cd apps/client && npm test && npm run check
 cd backend && npm test
 cd apps/community-hub && npm test
 node scripts/smoke-ui.js <port> <outDir> [views…]   # drives a running client (started with --remote-debugging-port)
+SMOKE_MODULE=./app.js SMOKE_FN=navigate node scripts/smoke-ui.js 9334 out overview live   # same for Polaris Owner (navigate via its app module)
 ```
 
 See [TESTING.md](TESTING.md) for the latest results.

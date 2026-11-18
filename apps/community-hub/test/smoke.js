@@ -15,7 +15,7 @@ const path = require('path');
 
 const args = process.argv.slice(2);
 const DIST = path.resolve(__dirname, '..', args[args.indexOf('--dist') + 1] && args.includes('--dist') ? args[args.indexOf('--dist') + 1] : 'dist');
-const PAGES = ['index', 'downloads', 'news', 'changelog', 'features', 'community', 'skins', 'resources', 'plugins', 'guides', 'support', 'bugs', 'suggestions', 'discord', 'about', '404'];
+const PAGES = ['index', 'downloads', 'news', 'changelog', 'features', 'community', 'skins', 'resources', 'plugins', 'guides', 'documentation', 'support', 'bugs', 'suggestions', 'contact', 'discord', 'about', '404'];
 const fails = [];
 const fail = (m) => fails.push(m);
 

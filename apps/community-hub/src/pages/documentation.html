@@ -1,0 +1,20 @@
+<!--@page {"title": "Documentation", "description": "Technical documentation for Polaris Client, the plugin API, the backend API and self-hosting.", "css": ["docs.css"], "js": "documentation.js"} -->
+<header class="page-head page-head--compact">
+  <div class="wrap">
+    <p class="page-head__label pl-label">Reference · documentation</p>
+    <div class="grid">
+      <div class="page-head__main">
+        <h1 class="page-head__title">Documentation</h1>
+        <p class="page-head__lede">The same documents that ship in the repository: installing, writing plugins, the backend API and running your own Polaris server. For step-by-step help in the client, see the <a href="guides.html">guides</a>.</p>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="wrap grid docs">
+  <nav class="docs__nav" aria-label="Documents" data-bind="nav"><div class="loading" role="status">Loading</div></nav>
+  <article class="docs__body" aria-live="polite">
+    <div class="docs__meta pl-mono" data-bind="meta"></div>
+    <div class="prose docs__prose" data-bind="doc"></div>
+    <nav class="docs__toc" aria-label="On this page" data-bind="toc" hidden></nav>
+  </article>
+</div>

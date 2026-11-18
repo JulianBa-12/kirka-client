@@ -3,7 +3,8 @@
  * account link. Every page module calls `boot()` first.
  */
 import { h, clear, icon, link, safeHref, $ } from './dom.js';
-import { bundle, announcements } from './data.js';
+import { bundle, announcements, invalidate } from './data.js';
+import { startRealtime } from './realtime.js';
 import { status, me } from './api.js';
 
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -112,6 +113,18 @@ async function renderAnnouncements() {
   }));
 }
 
+function renderMaintenance(m) {
+  const host = $('[data-chrome="announcements"]');
+  if (!host) return;
+  const old = host.querySelector('[data-maintenance]');
+  if (old) old.remove();
+  if (!m || !m.active) return;
+  host.prepend(h('div', { class: 'announcement', dataset: { level: 'warning', maintenance: '1' }, role: 'status' },
+    h('div', { class: 'wrap announcement__inner' },
+      h('span', { class: 'announcement__level pl-label' }, 'Maintenance'),
+      h('p', { class: 'announcement__text' }, h('strong', null, 'Community features are paused.'), m.message || 'Downloads and documentation keep working.'))));
+}
+
 async function renderAccount() {
   const a = $('[data-chrome="account"]');
   if (!a) return;
@@ -145,6 +158,18 @@ export async function boot(pageId) {
   renderAnnouncements();
   renderAccount();
   renderDataStatus(b);
+  startRealtime({
+    async onConfig() {
+      invalidate('bundle');
+      const nb = await bundle();
+      applyTheme(nb.theme); applyCss(nb.css); renderNav(nb.site, pageId); renderFooter(nb.site); renderDataStatus(nb);
+      window.dispatchEvent(new CustomEvent('polaris:bundle', { detail: nb }));
+    },
+    onAnnouncements() { renderAnnouncements(); },
+    onMaintenance(m) { renderMaintenance(m); },
+    onEvent(e) { window.dispatchEvent(new CustomEvent('polaris:live', { detail: e })); },
+    onStatus(st) { const el = $('[data-chrome="data-status"]'); if (el) el.dataset.live = st; },
+  });
   return { bundle: b, site: b.site, community: b.community };
 }
 

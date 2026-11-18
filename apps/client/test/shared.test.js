@@ -54,3 +54,11 @@ test('remote configuration cannot smuggle unknown fields or scripts into a domai
   const r = validateDomain('client.features', bad);
   if (r.ok) assert.ok(!JSON.stringify(r.value).includes('child_process'));
 });
+
+test('markdown: pipe tables, h4 and lone pipe lines terminate', () => {
+  const md = require('../src/shared/utilities/markdown.js');
+  const out = md.render('| a | b |\n|---|:--|\n| `x` | <y> |\n\n| not a table |\nnext line\n#### Deep');
+  assert.match(out, /<table><thead><tr><th>a<\/th><th>b<\/th><\/tr><\/thead><tbody><tr><td><code>x<\/code><\/td><td>&lt;y&gt;<\/td><\/tr>/);
+  assert.match(out, /<p>\| not a table \| next line<\/p>/);
+  assert.match(out, /<h5>Deep<\/h5>/);
+});

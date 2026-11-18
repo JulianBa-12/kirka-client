@@ -1,7 +1,7 @@
 /**
  * Safe Markdown subset renderer (escape-first). CommonJS + browser global (window.PolarisMarkdown).
  * Supports: # ## ### headings, paragraphs, **bold**, *em*, `code`, ``` fences, - lists, 1. lists,
- * > quotes, [text](https://… | relative.html) links, --- rules.
+ * > quotes, [text](https://… | relative.html) links, --- rules, | pipe | tables |.
  */
 (function (root) {
   'use strict';
@@ -25,15 +25,23 @@
         while (i < lines.length && !/^```/.test(lines[i])) buf.push(lines[i++]);
         i++; html.push(`<pre><code>${esc(buf.join('\n'))}</code></pre>`); continue;
       }
-      const h = /^(#{1,3})\s+(.*)$/.exec(line);
-      if (h) { const n = h[1].length + 1; html.push(`<h${n}>${inline(h[2])}</h${n}>`); i++; continue; }
+      const h = /^(#{1,4})\s+(.*)$/.exec(line);
+      if (h) { const n = Math.min(5, h[1].length + 1); html.push(`<h${n}>${inline(h[2])}</h${n}>`); i++; continue; }
+      if (/^\s*\|.*\|\s*$/.test(line) && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(lines[i + 1])) {
+        const cells = (l) => l.trim().replace(/^\|/, '').replace(/\|$/, '').split(/(?<!\\)\|/).map((c) => inline(c.trim().replace(/\\\|/g, '|')));
+        const head = cells(line); i += 2;
+        const rows = [];
+        while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) rows.push(cells(lines[i++]));
+        html.push(`<div class="md-table"><table><thead><tr>${head.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`);
+        continue;
+      }
       if (/^---+\s*$/.test(line)) { html.push('<hr>'); i++; continue; }
       if (/^>\s?/.test(line)) { const buf = []; while (i < lines.length && /^>\s?/.test(lines[i])) buf.push(lines[i++].replace(/^>\s?/, '')); html.push(`<blockquote>${inline(buf.join(' '))}</blockquote>`); continue; }
       if (/^\s*[-*]\s+/.test(line)) { const buf = []; while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) buf.push(`<li>${inline(lines[i++].replace(/^\s*[-*]\s+/, ''))}</li>`); html.push(`<ul>${buf.join('')}</ul>`); continue; }
       if (/^\s*\d+\.\s+/.test(line)) { const buf = []; while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) buf.push(`<li>${inline(lines[i++].replace(/^\s*\d+\.\s+/, ''))}</li>`); html.push(`<ol>${buf.join('')}</ol>`); continue; }
       if (!line.trim()) { i++; continue; }
-      const buf = [];
-      while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|```|>|\s*[-*]\s+|\s*\d+\.\s+|---+\s*$)/.test(lines[i])) buf.push(lines[i++]);
+      const buf = [lines[i++]];
+      while (i < lines.length && lines[i].trim() && !/^(#{1,4}\s|```|>|\s*\|.*\|\s*$|\s*[-*]\s+|\s*\d+\.\s+|---+\s*$)/.test(lines[i])) buf.push(lines[i++]);
       html.push(`<p>${inline(buf.join(' '))}</p>`);
     }
     return html.join('\n');

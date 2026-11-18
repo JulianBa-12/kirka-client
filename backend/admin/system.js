@@ -151,7 +151,7 @@ function createOwnerSystemRoutes(ctx) {
   });
   r.get('/feedback', (req, res) => {
     const where = []; const p = [];
-    if (['bug', 'suggestion'].includes(req.query.type)) { where.push('type = ?'); p.push(req.query.type); }
+    if (['bug', 'suggestion', 'contact'].includes(req.query.type)) { where.push('type = ?'); p.push(req.query.type); }
     if (typeof req.query.status === 'string' && req.query.status) { where.push('status = ?'); p.push(req.query.status); }
     const w = where.length ? `WHERE ${where.join(' AND ')}` : '';
     res.json({ items: db.all(`SELECT * FROM feedback ${w} ORDER BY id DESC LIMIT 300`, ...p).map((f) => ({ ...feedback.serialize(f), contact: f.contact })) });

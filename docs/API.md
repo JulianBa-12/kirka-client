@@ -117,33 +117,35 @@ Markdown subset used for `body` fields: paragraphs, `#`–`###` headings, `**bol
 
 ## Community content (`CommunityItem`)
 
-Kinds: `skin`, `background`, `resource`, `crosshair`, `hud`, `theme`, `plugin`.
+Kinds: `skin`, `background`, `resource`, `crosshair`, `hud`, `theme`, `workspace`, `plugin`.
 
 `CommunityItem` = `{ id, kind, title, description, category, tags:[], status:'pending'|'approved'|'rejected'|'hidden', featured, official,
-  fileUrl, previewUrl|null, mime, size, metadata:{…}, version, downloads, likes, liked?, comments, author: PublicUser, createdAt, updatedAt, price: { amount:0, currency:'none', label:'Free' } }`
+  fileUrl, previewUrl|null, mime, size, metadata:{…}, version, downloads, likes, liked?, comments, rating: { count, average|null, mine|null }, author: PublicUser, createdAt, updatedAt, price: { amount:0, currency:'none', label:'Free' } }`
 
 Plugin metadata: `{ manifest: { id, name, version, entry, permissions:[…], minClientVersion }, compatibility:'compatible'|'untested'|'incompatible', approvedPermissions:[…] }` — see docs/PLUGINS.md.
-Crosshair / hud / theme items: the uploaded file is a JSON document (validated against the matching schema).
+Crosshair / hud / theme / workspace items: the uploaded file is a JSON document (validated against the matching schema).
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/community/items?kind&q&category&sort=new|popular|downloads&featured=1&author=username&limit&offset` | approved only (authors also see own pending with `mine=1`) |
+| GET | `/community/items?kind&q&category&sort=new|popular|downloads|rating&featured=1&author=username&limit&offset` | approved only (authors also see own pending with `mine=1`) |
 | GET | `/community/items/:id` | |
 | POST | `/community/items` | multipart: `file` (required), `preview` (optional image), fields `kind,title,description,category,tags (comma list),metadata (JSON string)` → 201 item (status pending unless approval disabled) |
 | PATCH | `/community/items/:id` | author: `{ title, description, category, tags }` (re-enters review if approval required) |
 | DELETE | `/community/items/:id` | author or owner |
-| POST/DELETE | `/community/items/:id/like` | |
+| POST/DELETE | `/community/items/:id/like` | favourite |
+| PUT | `/community/items/:id/rating` | auth, `{ stars: 1-5 }` → `{ count, average, mine }` (one rating per account, replaces the previous one; not allowed on your own item) |
+| DELETE | `/community/items/:id/rating` | auth, removes your rating → `{ count, average, mine:null }` |
 | GET | `/community/items/:id/comments` | `{ items:[{ id, user, body, createdAt }] }` |
 | POST | `/community/items/:id/comments` | `{ body (1-1000) }` |
 | GET | `/community/items/:id/download` | 302 to file URL, counts download |
 | GET | `/community/categories` | `{ categories:{ kind:[…] }, rules }` |
 
-## Feedback (bug reports & suggestions)
+## Feedback (bug reports, suggestions, contact)
 
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/feedback?type=suggestion|bug&sort=top|new&status` | public list `{ items:[Feedback], total }` |
-| POST | `/feedback` | `{ type, title (5-120), body (10-5000), version?, os?, contact? }` — auth optional (anonymous: 3/hour/IP) |
+| POST | `/feedback` | `{ type: 'bug'|'suggestion'|'contact', title (5-120), body (10-5000), version?, os?, contact? }` — auth optional (anonymous: 3/hour/IP). `contact` messages are private: never listed publicly, visible only in `/owner/feedback?type=contact` |
 | POST/DELETE | `/feedback/:id/vote` | auth |
 
 `Feedback` = `{ id, type, title, body, status:'open'|'planned'|'in-progress'|'done'|'wontfix'|'duplicate', votes, voted?, response|null, version, os, createdAt, author: PublicUser|null }`
@@ -236,7 +238,7 @@ Accepted: PNG, JPEG, WebP, GIF, SVG (sanitized; scripts/handlers/foreignObject/e
 | DELETE | `/owner/community/comments/:id` | |
 | GET | `/owner/reports?status=open|resolved|dismissed` | `{ items:[{ id, reporter, targetType, targetId, target (resolved preview), reason, details, status, resolution, createdAt }] }` |
 | PATCH | `/owner/reports/:id` | `{ status, resolution }` |
-| GET | `/owner/feedback?type&status` · PATCH `/owner/feedback/:id` `{ status, response }` · DELETE | |
+| GET | `/owner/feedback?type=bug|suggestion|contact&status` · PATCH `/owner/feedback/:id` `{ status, response }` · DELETE | |
 
 ### Users
 | GET | `/owner/users?q&role&status&limit&offset` | `{ items:[AdminUser], total }` |
@@ -264,4 +266,31 @@ Accepted: PNG, JPEG, WebP, GIF, SVG (sanitized; scripts/handlers/foreignObject/e
 | GET | `/owner/integrations/github` | `{ configured, repo, branch, path, lastPublish:{ at, commit, ok, error }|null }` |
 | POST | `/owner/integrations/github/publish` | writes signed bundles + news + changelog JSON into the Pages repo (token stays server-side) |
 
+### Realtime
+| GET | `/owner/realtime` | `{ total, byChannel:{ client, website, owner }, signedIn, startedAt, events, recent:[{ event, at, channels, summary }], connections:[{ channel, owner, signedIn, connectedAt, agent }] }` |
+| POST | `/owner/realtime/resync` | broadcasts `config.updated` (`reason:'resync'`) to every client and website connection → `{ ok, notified:{…} }` (audited) |
+
 Every mutating owner request is written to the audit log with actor, IP, target and a diff summary.
+
+## Realtime — WebSocket `/api/v1/realtime?channel=client|website|owner`
+
+The socket carries **notifications only**. Configuration and releases are still delivered as signed envelopes over HTTPS; a client that receives `config.updated` downloads and verifies the bundle before anything changes, so a forged message can at most trigger a refetch.
+
+| Channel | Who | Receives |
+|---|---|---|
+| `client` | Polaris Client | `config.updated` (target client), `announcements.changed`, `maintenance`, `releases.changed`, `news.changed`; after `auth` with a user session also personal `notification` |
+| `website` | Community Hub pages | `config.updated` (target website), `announcements.changed`, `maintenance`, `releases.changed`, `news.changed` |
+| `owner` | Polaris Owner (main process) | all public events plus `audit`, `report.created`, `feedback.created`, `stats`. Requires `auth` with an owner session bound to an active owner connection. Connections that send an `Origin` header are refused (403), so a web page cannot open it. |
+
+Server → client messages:
+
+| `type` | Payload |
+|---|---|
+| `hello` | `{ channel, server, bundles:{ client:{ sequence, issuedAt }, website:{…}, releases:{…} }, maintenance:{ active, message }, announcements:[…], heartbeatMs }` — sent on connect and after `sync` (use the sequences to catch up after being offline) |
+| `event` | `{ event, data, at, id }` — `config.updated` data: `{ target, sequence, domains:[{ domain, version, apply:'live'|'restart' }], restartRequired, reason:'publish'|'rollback'|'rebuild'|'resync'|'catch-up' }` |
+| `auth` | `{ ok, role?, username?, error? }` |
+| `auth-required` | owner channel only, right after `hello` |
+| `stats` / `recent` | owner channel only |
+| `pong` / `error` | |
+
+Client → server messages: `{type:'auth', token}`, `{type:'sync'}`, `{type:'ping'}`, `{type:'stats'}` (owner). Limits: 8 KB per message, 30 messages per 10 s (close 4429), 24 connections per IP. Close codes: `4401` owner session ended or revoked, `4403` owner session required. The server sends WebSocket pings every 30 s and drops connections that do not answer.

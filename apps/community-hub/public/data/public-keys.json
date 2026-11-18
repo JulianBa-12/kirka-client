@@ -1,8 +1,8 @@
 {
   "keys": [
     {
-      "keyId": "6906d93966a1b517",
-      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/JF//2Xm2yTUrmnhKzBQZVGWXWwtLTXfqUURnvtotTA=\n-----END PUBLIC KEY-----\n",
+      "keyId": "d3d1bf42ccbcdfe3",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEADB1Dwi8UHzgp5GKxbwYD9WuO9wQ2nq+xG8cn+xXeqI0=\n-----END PUBLIC KEY-----\n",
       "algorithm": "ed25519"
     }
   ]

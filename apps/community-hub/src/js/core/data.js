@@ -8,6 +8,8 @@ import { api, status } from './api.js';
 
 const cache = new Map();
 const once = (key, fn) => { if (!cache.has(key)) cache.set(key, fn()); return cache.get(key); };
+/** Forget cached data (used when the realtime channel reports a change). No key = everything. */
+export function invalidate(key) { if (key) cache.delete(key); else cache.clear(); }
 
 async function staticJson(file) {
   try {
